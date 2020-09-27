@@ -1,6 +1,5 @@
-  
 .vs/
-/project/bin/
-/project/obj/
+**/Mafia/bin/
+**/Mafia/obj/
 **/debug
 **/Debug
