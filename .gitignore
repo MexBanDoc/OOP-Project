@@ -1,0 +1,6 @@
+  
+.vs/
+/project/bin/
+/project/obj/
+**/debug
+**/Debug
