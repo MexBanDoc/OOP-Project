@@ -10,6 +10,7 @@ namespace Mafia
     {
         static void Main(string[] args)
         {
+            Console.WriteLine("U have killed");
         }
     }
 }
