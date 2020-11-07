@@ -1,4 +1,4 @@
-﻿namespace Mafia.Domain.Persons
+﻿namespace Mafia.Domain
 {
     public class Person : IPerson
     {

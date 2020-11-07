@@ -1,4 +1,4 @@
-﻿namespace Mafia.Domain
+﻿namespace Mafia.App
 {
     public interface ISettings
     {
