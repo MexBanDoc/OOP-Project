@@ -45,10 +45,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App\Game.cs" />
+    <Compile Include="App\ISettings.cs" />
     <Compile Include="Domain\DayTime.cs" />
     <Compile Include="Domain\ICity.cs" />
     <Compile Include="Domain\IPerson.cs" />
-    <Compile Include="Domain\ISettings.cs" />
+    <Compile Include="Domain\Persons\Person.cs" />
+    <Compile Include="Domain\Role.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -67,7 +69,6 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Domain\Persons" />
     <Folder Include="Infrastructure" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

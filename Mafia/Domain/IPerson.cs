@@ -4,5 +4,6 @@
     {
         public void Die();
         public bool IsAlive { get; }
+        public Role Role { get; }
     }
 }
