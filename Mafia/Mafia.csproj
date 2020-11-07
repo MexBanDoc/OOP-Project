@@ -46,6 +46,7 @@
   <ItemGroup>
     <Compile Include="App\Game.cs" />
     <Compile Include="App\ISettings.cs" />
+    <Compile Include="Domain\City.cs" />
     <Compile Include="Domain\DayTime.cs" />
     <Compile Include="Domain\ICity.cs" />
     <Compile Include="Domain\IPerson.cs" />
