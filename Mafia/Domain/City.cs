@@ -16,18 +16,18 @@ namespace Mafia.Domain
             DayTime = DayTime.Day;
         }
         
-        public void EndDay()
+        public void StartNight()
         {
             DayTime = DayTime.Night;
         }
 
-        public void EndNight()
+        public void StartDay()
         {
             Immortals.Clear();
             DayTime = DayTime.Day;
         }
 
-        public void Kill(IPerson person)
+        public void Murder(IPerson person)
         {
             if (!Population.Contains(person))
             {
@@ -37,6 +37,22 @@ namespace Mafia.Domain
 
             if (!Immortals.Contains(person))
                 person.Die();
+        }
+
+        public void Heal(IPerson person)
+        {
+            if (!Population.Contains(person))
+            {
+                Console.Error.Write("Unknown Person");
+                return;
+            }
+            
+            Immortals.Add(person);
+        }
+
+        public Role Investigate(IPerson person)
+        {
+            return person.Role;
         }
     }
 }

@@ -5,6 +5,8 @@
         Peaceful,
         Mafia,
         Doctor,
-        Commissar
+        Sheriff,
+        Whore,
+        Maniac
     }
 }

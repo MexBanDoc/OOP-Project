@@ -6,5 +6,14 @@ namespace Mafia.Domain
     {
         public ICollection<IPerson> Population { get; }
         public DayTime DayTime { get; }
+
+        public void StartNight();
+        public void StartDay();
+
+        public void Heal(IPerson person);
+
+        public void Murder(IPerson person);
+
+        public Role Investigate(IPerson person);
     }
 }
