@@ -1,12 +1,13 @@
-﻿namespace Mafia.Domain
+﻿using System.Collections.Generic;
+
+namespace Mafia.Domain
 {
     public class Mafia : Role
     {
-        public override void Interact(IPerson target)
+        public Mafia() : base(new List<IInteraction>(new IInteraction[] {new KillInteraction(), new VoteInteraction()}))
         {
-            target.Die();
         }
 
-        public override string Name { get; } = "Mafia";
+        public override string Name { get; } = "Мафия";
     }
 }

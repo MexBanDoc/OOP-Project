@@ -49,6 +49,9 @@
     <Compile Include="Domain\DayTime.cs" />
     <Compile Include="Domain\Game.cs" />
     <Compile Include="Domain\ICity.cs" />
+    <Compile Include="Domain\Interactions\IInteraction.cs" />
+    <Compile Include="Domain\Interactions\KillInteraction.cs" />
+    <Compile Include="Domain\Interactions\VoteInteraction.cs" />
     <Compile Include="Domain\IPerson.cs" />
     <Compile Include="Domain\ISettings.cs" />
     <Compile Include="Domain\IUserInterface.cs" />
