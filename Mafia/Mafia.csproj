@@ -52,8 +52,10 @@
     <Compile Include="Domain\DayTime.cs" />
     <Compile Include="Domain\ICity.cs" />
     <Compile Include="Domain\IPerson.cs" />
-    <Compile Include="Domain\Person.cs" />
     <Compile Include="Domain\Role.cs" />
+    <Compile Include="Domain\Person.cs" />
+    <Compile Include="Domain\Roles\Mafia.cs" />
+    <Compile Include="Domain\Roles\Peaceful.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -4,16 +4,17 @@
     {
         public Person(Role role)
         {
-            IsAlive = true;
             Role = role;
         }
         
         public void Die()
         {
-            IsAlive = false;
+            if (!IsImmortal)
+                IsAlive = false;
         }
 
-        public bool IsAlive { get; private set; }
+        public bool IsAlive { get; private set; } = true;
+        public bool IsImmortal { get; set; } = false;
         public Role Role { get; }
     }
 }

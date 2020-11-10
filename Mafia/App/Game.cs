@@ -19,12 +19,13 @@ namespace Mafia.App
         public void ProcessNight()
         {
             City.StartNight();
-            var personToHeal = Bot.GetPersonToHeal(City.Population.Where(p => p.Role == Role.Doctor));
-            City.Heal(personToHeal);
-            var personToInvestigate = Bot.GetPersonToInvestigate(City.Population.Where(p => p.Role == Role.Sheriff));
-            City.Investigate(personToInvestigate);
-            var personToMurder = Bot.GetPersonToMurder(City.Population.Where(p => p.Role == Role.Mafia));
-            City.Murder(personToMurder);
+            //var personToHeal = Bot.GetPersonToHeal(City.Population.Where(p => p.RoleEnum == RoleEnum.Doctor));
+            //City.Heal(personToHeal);
+            //var personToInvestigate = Bot.GetPersonToInvestigate(City.Population.Where(p => p.RoleEnum == RoleEnum.Sheriff));
+            //City.Investigate(personToInvestigate);
+            var personToMurder = Bot.GetPersonToMurder(City.Population.Where(p => p.Role is Domain.Mafia));
+            var mafia = City.Roles.First(r => r is Domain.Mafia);
+            mafia.Interact(personToMurder);
         }
 
         public void ProcessDay()

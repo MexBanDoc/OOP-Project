@@ -1,12 +1,8 @@
 ﻿namespace Mafia.Domain
 {
-    public enum Role
+    public abstract class Role
     {
-        Peaceful,
-        Mafia,
-        Doctor,
-        Sheriff,
-        Whore,
-        Maniac
+        public abstract void Interact(IPerson person);
+        public abstract string Name { get; }
     }
 }

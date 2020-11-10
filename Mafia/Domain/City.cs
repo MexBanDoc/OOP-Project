@@ -7,7 +7,7 @@ namespace Mafia.Domain
     public class City : ICity
     {
         public ICollection<IPerson> Population { get; }
-        public ICollection<IPerson> Immortals { get; private set; }
+        public ICollection<Role> Roles { get; } = new List<Role>();
         public DayTime DayTime { get; private set; }
         
         public City(ICollection<IPerson> population)
@@ -23,10 +23,19 @@ namespace Mafia.Domain
 
         public void StartDay()
         {
-            Immortals.Clear();
+            foreach (var person in Population)
+            {
+                person.IsImmortal = false;
+            }
             DayTime = DayTime.Day;
         }
 
+        public void AddRole(Role role)
+        {
+            Roles.Add(role);
+        }
+
+        /*
         public void Murder(IPerson person)
         {
             if (!Population.Contains(person))
@@ -54,5 +63,6 @@ namespace Mafia.Domain
         {
             return person.Role;
         }
+        */
     }
 }
