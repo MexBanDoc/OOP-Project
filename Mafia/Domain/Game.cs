@@ -1,19 +1,19 @@
-﻿using System.Linq;
-using Mafia.Domain;
+﻿using System;
+using System.Linq;
 
-namespace Mafia.App
+namespace Mafia.Domain
 {
     public class Game
     {
         private ISettings Settings;
         private ICity City;
-        private IBot Bot;
+        private IUserInterface userInterface;
 
-        public Game(ISettings settings, ICity city, IBot bot)
+        public Game(ISettings settings, ICity city, IUserInterface userInterface)
         {
             Settings = settings;
             City = city;
-            Bot = bot;
+            this.userInterface = userInterface;
         }
 
         public void ProcessNight()
@@ -23,9 +23,18 @@ namespace Mafia.App
             //City.Heal(personToHeal);
             //var personToInvestigate = Bot.GetPersonToInvestigate(City.Population.Where(p => p.RoleEnum == RoleEnum.Sheriff));
             //City.Investigate(personToInvestigate);
-            var personToMurder = Bot.GetPersonToMurder(City.Population.Where(p => p.Role is Domain.Mafia));
+            //var personToMurder = userInterface.GetPersonToMurder(City.Population.Where(p => p.Role is Domain.Mafia));
+            var personToMurder = userInterface.AskForTarget(
+                City.Population.Where(p => p.Role is Domain.Mafia),
+                new Mafia());
             var mafia = City.Roles.First(r => r is Domain.Mafia);
             mafia.Interact(personToMurder);
+            //обобщить
+        }
+
+        public void StartGame()
+        {
+            throw new NotImplementedException();
         }
 
         public void ProcessDay()

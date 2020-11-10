@@ -16,5 +16,6 @@
         public bool IsAlive { get; private set; } = true;
         public bool IsImmortal { get; set; } = false;
         public Role Role { get; }
+        public string Name { get; }
     }
 }

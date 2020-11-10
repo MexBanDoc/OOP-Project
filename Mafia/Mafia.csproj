@@ -44,18 +44,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="App\Game.cs" />
-    <Compile Include="App\IBot.cs" />
-    <Compile Include="App\ISettings.cs" />
-    <Compile Include="App\WinState.cs" />
+    <Compile Include="App\TGBot.cs" />
     <Compile Include="Domain\City.cs" />
     <Compile Include="Domain\DayTime.cs" />
+    <Compile Include="Domain\Game.cs" />
     <Compile Include="Domain\ICity.cs" />
     <Compile Include="Domain\IPerson.cs" />
+    <Compile Include="Domain\ISettings.cs" />
+    <Compile Include="Domain\IUserInterface.cs" />
     <Compile Include="Domain\Role.cs" />
     <Compile Include="Domain\Person.cs" />
     <Compile Include="Domain\Roles\Mafia.cs" />
     <Compile Include="Domain\Roles\Peaceful.cs" />
+    <Compile Include="Domain\WinState.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

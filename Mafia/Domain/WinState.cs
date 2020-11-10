@@ -1,4 +1,4 @@
-﻿namespace Mafia.App
+﻿namespace Mafia.Domain
 {
     public enum WinState
     {
