@@ -31,7 +31,11 @@ namespace Mafia.Domain
 
         public void StartGame()
         {
-            throw new NotImplementedException();
+            while (Settings.WinCondition(City) == WinState.InProcess)
+            {
+                ProcessNight();
+                ProcessDay();
+            }
         }
 
         public void ProcessDay()
