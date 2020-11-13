@@ -2,9 +2,9 @@
 
 namespace Mafia.Domain
 {
-    public class Healer : Role
+    public class HealerRole : Role
     {
-        public Healer() : base(new List<IInteraction>{new HealInteraction()})
+        public HealerRole() : base(new List<IInteraction>{new HealInteraction()})
         {
         }
 

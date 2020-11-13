@@ -58,9 +58,9 @@
     <Compile Include="Domain\IUserInterface.cs" />
     <Compile Include="Domain\Role.cs" />
     <Compile Include="Domain\Person.cs" />
-    <Compile Include="Domain\Roles\Healer.cs" />
-    <Compile Include="Domain\Roles\Mafia.cs" />
-    <Compile Include="Domain\Roles\Citizen.cs" />
+    <Compile Include="Domain\Roles\HealerRole.cs" />
+    <Compile Include="Domain\Roles\MafiaRole.cs" />
+    <Compile Include="Domain\Roles\CitizenRole.cs" />
     <Compile Include="Domain\Settings.cs" />
     <Compile Include="Domain\WinState.cs" />
     <Compile Include="Infrastructure\MoreLinq.cs" />

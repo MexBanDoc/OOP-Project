@@ -33,7 +33,7 @@ namespace Mafia.Domain
         public static Settings Default = new Settings(
             (city) =>
                 {
-                    var mafiaCount = city.Population.Count(p => p.NightRole is Mafia && p.IsAlive);
+                    var mafiaCount = city.Population.Count(p => p.NightRole is MafiaRole && p.IsAlive);
                     var totalCount = city.Population.Count(p => p.IsAlive);
                     if (mafiaCount == 0)
                         return WinState.MafiaWins;
@@ -41,7 +41,7 @@ namespace Mafia.Domain
                         return WinState.MafiaWins;
                     return WinState.InProcess;
                 },
-            new List<Tuple<Role, int>>{Tuple.Create((Role)new Mafia(), 1), Tuple.Create((Role)new Citizen(), 4)},
+            new List<Tuple<Role, int>>{Tuple.Create((Role)new MafiaRole(), 1), Tuple.Create((Role)new CitizenRole(), 4)},
             4);
     }
 }
