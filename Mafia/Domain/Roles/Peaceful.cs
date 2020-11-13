@@ -1,12 +1,13 @@
-﻿namespace Mafia.Domain
+﻿using System.Collections.Generic;
+
+namespace Mafia.Domain
 {
     public class Peaceful : Role
     {
-        public override void Interact(IPerson target)
+        public Peaceful() : base(new List<IInteraction>(new[] {new VoteInteraction()}))
         {
-            return;
         }
 
-        public override string Name { get; } = "Peaceful";
+        public override string Name { get; } = "Мирный житель";
     }
 }
