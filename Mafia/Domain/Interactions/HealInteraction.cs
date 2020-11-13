@@ -1,10 +1,10 @@
 ﻿namespace Mafia.Domain
 {
-    public class VoteInteraction : IInteraction
+    public class HealInteraction : IInteraction
     {
         public void Interact(IPerson person)
         {
-            person.TryKill();
+            person.Heal();
         }
     }
 }

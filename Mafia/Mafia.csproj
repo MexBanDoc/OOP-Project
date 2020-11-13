@@ -49,6 +49,7 @@
     <Compile Include="Domain\DayTime.cs" />
     <Compile Include="Domain\Game.cs" />
     <Compile Include="Domain\ICity.cs" />
+    <Compile Include="Domain\Interactions\HealInteraction.cs" />
     <Compile Include="Domain\Interactions\IInteraction.cs" />
     <Compile Include="Domain\Interactions\KillInteraction.cs" />
     <Compile Include="Domain\Interactions\VoteInteraction.cs" />
@@ -57,8 +58,9 @@
     <Compile Include="Domain\IUserInterface.cs" />
     <Compile Include="Domain\Role.cs" />
     <Compile Include="Domain\Person.cs" />
+    <Compile Include="Domain\Roles\Healer.cs" />
     <Compile Include="Domain\Roles\Mafia.cs" />
-    <Compile Include="Domain\Roles\Peaceful.cs" />
+    <Compile Include="Domain\Roles\Citizen.cs" />
     <Compile Include="Domain\WinState.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

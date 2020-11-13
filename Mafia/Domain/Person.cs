@@ -7,10 +7,16 @@
             Role = role;
         }
         
-        public void Die()
+        public void TryKill()
         {
             if (!IsImmortal)
                 IsAlive = false;
+        }
+
+        public void Heal()
+        {
+            IsAlive = true;
+            IsImmortal = true;
         }
 
         public bool IsAlive { get; private set; } = true;

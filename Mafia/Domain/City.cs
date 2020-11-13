@@ -34,35 +34,5 @@ namespace Mafia.Domain
         {
             Roles.Add(role);
         }
-
-        /*
-        public void Murder(IPerson person)
-        {
-            if (!Population.Contains(person))
-            {
-                Console.Error.Write("Unknown Person");
-                return;
-            }
-
-            if (!Immortals.Contains(person))
-                person.Die();
-        }
-
-        public void Heal(IPerson person)
-        {
-            if (!Population.Contains(person))
-            {
-                Console.Error.Write("Unknown Person");
-                return;
-            }
-            
-            Immortals.Add(person);
-        }
-
-        public Role Investigate(IPerson person)
-        {
-            return person.Role;
-        }
-        */
     }
 }

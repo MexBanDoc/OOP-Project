@@ -19,5 +19,6 @@ namespace Mafia.Domain
             }
         }
         public abstract string Name { get; }
+        public abstract DayTime dayTime { get; }
     }
 }

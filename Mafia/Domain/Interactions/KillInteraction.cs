@@ -4,7 +4,7 @@
     {
         public void Interact(IPerson person)
         {
-            person.Die();
+            person.TryKill();
         }
     }
 }

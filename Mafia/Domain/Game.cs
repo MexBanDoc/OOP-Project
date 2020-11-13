@@ -19,17 +19,7 @@ namespace Mafia.Domain
         public void ProcessNight()
         {
             City.StartNight();
-            //var personToHeal = Bot.GetPersonToHeal(City.Population.Where(p => p.RoleEnum == RoleEnum.Doctor));
-            //City.Heal(personToHeal);
-            //var personToInvestigate = Bot.GetPersonToInvestigate(City.Population.Where(p => p.RoleEnum == RoleEnum.Sheriff));
-            //City.Investigate(personToInvestigate);
-            //var personToMurder = userInterface.GetPersonToMurder(City.Population.Where(p => p.Role is Domain.Mafia));
-            var personToMurder = userInterface.AskForTarget(
-                City.Population.Where(p => p.Role is Domain.Mafia),
-                new Mafia());
-            var mafia = City.Roles.First(r => r is Domain.Mafia);
-            mafia.Interact(personToMurder);
-            //обобщить
+            DoInteractions(DayTime.Night);
         }
 
         public void StartGame()
@@ -40,6 +30,16 @@ namespace Mafia.Domain
         public void ProcessDay()
         {
             City.StartDay();
+            DoInteractions(DayTime.Day);
+        }
+
+        private void DoInteractions(DayTime dayTime)
+        {
+            foreach (var role in City.Roles.Where(r => r.dayTime == dayTime)) 
+            {
+                var target = userInterface.AskForInteractionTarget(City.Population.Where(p => p.Role == role), role);
+                role.Interact(target);
+            }
         }
     }
 }
