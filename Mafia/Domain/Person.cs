@@ -1,10 +1,13 @@
-﻿namespace Mafia.Domain
+﻿using System.Collections.Generic;
+
+namespace Mafia.Domain
 {
     public class Person : IPerson
     {
-        public Person(Role role)
+        public Person(Role dayRole, Role nightRole)
         {
-            Role = role;
+            DayRole = dayRole;
+            NightRole = nightRole;
         }
         
         public void TryKill()
@@ -21,7 +24,9 @@
 
         public bool IsAlive { get; private set; } = true;
         public bool IsImmortal { get; set; } = false;
-        public Role Role { get; }
+        public Role DayRole { get; }
+        public Role NightRole { get; }
+
         public string Name { get; }
     }
 }

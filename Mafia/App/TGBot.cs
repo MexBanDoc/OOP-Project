@@ -5,6 +5,7 @@ namespace Mafia.App
 {
     public class TGBot : IUserInterface
     {
+        /*
         public IPerson GetPersonToHeal(IEnumerable<IPerson> healers)
         {
             return AskForInteractionTarget(healers, new Healer());
@@ -19,6 +20,7 @@ namespace Mafia.App
         {
             throw new System.NotImplementedException();
         }
+        */
 
         public IPerson AskForInteractionTarget(IEnumerable<IPerson> players, Role role)
         {

@@ -10,13 +10,5 @@ namespace Mafia.Domain
 
         public void StartNight();
         public void StartDay();
-
-        /*
-        public void Heal(IPerson person);
-
-        public void Murder(IPerson person);
-
-        public Role Investigate(IPerson person);
-        */
     }
 }

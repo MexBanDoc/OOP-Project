@@ -61,7 +61,9 @@
     <Compile Include="Domain\Roles\Healer.cs" />
     <Compile Include="Domain\Roles\Mafia.cs" />
     <Compile Include="Domain\Roles\Citizen.cs" />
+    <Compile Include="Domain\Settings.cs" />
     <Compile Include="Domain\WinState.cs" />
+    <Compile Include="Infrastructure\MoreLinq.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -78,9 +80,6 @@
       <Isolated>False</Isolated>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </COMReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Infrastructure" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

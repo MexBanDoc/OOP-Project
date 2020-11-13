@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using Mafia.Infrastructure;
 
 namespace Mafia.Domain
 {
@@ -14,6 +16,11 @@ namespace Mafia.Domain
             Settings = settings;
             City = city;
             this.userInterface = userInterface;
+        }
+
+        public Game(ISettings settings, IUserInterface userInterface)
+            : this(settings, new City(new List<IPerson>(settings.GeneratePopulation())), userInterface)
+        {
         }
 
         public void ProcessNight()
@@ -37,7 +44,9 @@ namespace Mafia.Domain
         {
             foreach (var role in City.Roles.Where(r => r.dayTime == dayTime)) 
             {
-                var target = userInterface.AskForInteractionTarget(City.Population.Where(p => p.Role == role), role);
+                var target = userInterface.AskForInteractionTarget(
+                    City.Population.Where(p => (dayTime==DayTime.Day?p.DayRole:p.NightRole) == role), 
+                    role);
                 role.Interact(target);
             }
         }
