@@ -7,16 +7,13 @@ namespace Mafia.Domain
         public ICollection<IPerson> Population { get; }
         public ICollection<Role> Roles { get; }
         public DayTime DayTime { get; }
+        public Dictionary<IPerson, PersonState> LastChanges { get; }
+
+        public IPerson GetPersonByName(string name);
 
         public void StartNight();
         public void StartDay();
 
-        /*
-        public void Heal(IPerson person);
-
-        public void Murder(IPerson person);
-
-        public Role Investigate(IPerson person);
-        */
+        public void AddChange(IPerson target, Role role);
     }
 }

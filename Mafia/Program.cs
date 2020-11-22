@@ -1,4 +1,6 @@
 ﻿using System;
+using Mafia.App;
+using Mafia.Domain;
 
 namespace Mafia
 {
@@ -7,8 +9,7 @@ namespace Mafia
         static void Main(string[] args)
         {
             Console.WriteLine("U alive now");
-            //var settings = new Se
-            //var Game = new Game();
+            var Game = new Game(Settings.Default, new TGBot());
         }
     }
 }

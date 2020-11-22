@@ -54,22 +54,25 @@
   <ItemGroup>
     <Compile Include="App\TGBot.cs" />
     <Compile Include="Domain\City.cs" />
-    <Compile Include="Domain\DayTime.cs" />
+    <Compile Include="Domain\Enums\DayTime.cs" />
+    <Compile Include="Domain\Enums\PersonState.cs" />
+    <Compile Include="Domain\Enums\WinState.cs" />
     <Compile Include="Domain\Game.cs" />
-    <Compile Include="Domain\ICity.cs" />
     <Compile Include="Domain\Interactions\HealInteraction.cs" />
     <Compile Include="Domain\Interactions\IInteraction.cs" />
     <Compile Include="Domain\Interactions\KillInteraction.cs" />
     <Compile Include="Domain\Interactions\VoteInteraction.cs" />
-    <Compile Include="Domain\IPerson.cs" />
-    <Compile Include="Domain\ISettings.cs" />
-    <Compile Include="Domain\IUserInterface.cs" />
+    <Compile Include="Domain\Interfaces\ICity.cs" />
+    <Compile Include="Domain\Interfaces\IPerson.cs" />
+    <Compile Include="Domain\Interfaces\ISettings.cs" />
+    <Compile Include="Domain\Interfaces\IUserInterface.cs" />
     <Compile Include="Domain\Role.cs" />
     <Compile Include="Domain\Person.cs" />
-    <Compile Include="Domain\Roles\Healer.cs" />
-    <Compile Include="Domain\Roles\Mafia.cs" />
-    <Compile Include="Domain\Roles\Citizen.cs" />
-    <Compile Include="Domain\WinState.cs" />
+    <Compile Include="Domain\Roles\HealerRole.cs" />
+    <Compile Include="Domain\Roles\MafiaRole.cs" />
+    <Compile Include="Domain\Roles\CitizenRole.cs" />
+    <Compile Include="Domain\Settings.cs" />
+    <Compile Include="Infrastructure\MoreLinq.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -87,9 +90,6 @@
       <Isolated>False</Isolated>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </COMReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Infrastructure" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

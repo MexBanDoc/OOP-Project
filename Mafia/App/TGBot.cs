@@ -6,6 +6,7 @@ namespace Mafia.App
 {
     public class TGBot : IUserInterface
     {
+        /*
         public IPerson GetPersonToHeal(IEnumerable<IPerson> healers)
         {
             return AskForInteractionTarget(healers, new Healer());
@@ -20,13 +21,24 @@ namespace Mafia.App
         {
             throw new System.NotImplementedException();
         }
-
-        public IPerson AskForInteractionTarget(IEnumerable<IPerson> players, Role role)
+        */
+        public IPerson AskForInteractionTarget(IEnumerable<IPerson> players, Role role, ICity city)
         {
             throw new System.NotImplementedException();
         }
 
-        public void StarGame()
+        public void StartGame()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public void TellResults(ICity city, DayTime dayTime)
+        {
+            throw new System.NotImplementedException();
+        }
+
+
+        public void TellGameResult(WinState state)
         {
             throw new System.NotImplementedException();
         }

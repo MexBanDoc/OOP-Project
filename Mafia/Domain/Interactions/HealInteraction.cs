@@ -6,5 +6,7 @@
         {
             person.Heal();
         }
+
+        public PersonState ResultTargetState => PersonState.Immortal;
     }
 }

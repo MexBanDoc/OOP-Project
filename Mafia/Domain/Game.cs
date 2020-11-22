@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace Mafia.Domain
@@ -16,6 +16,11 @@ namespace Mafia.Domain
             this.userInterface = userInterface;
         }
 
+        public Game(ISettings settings, IUserInterface userInterface)
+            : this(settings, new City(new List<IPerson>(settings.GeneratePopulation())), userInterface)
+        {
+        }
+
         public void ProcessNight()
         {
             City.StartNight();
@@ -24,9 +29,20 @@ namespace Mafia.Domain
 
         public void StartGame()
         {
-            throw new NotImplementedException();
+            userInterface.StartGame();
+            while (GetGameStatus() == WinState.InProcess)
+            {
+                ProcessNight();
+                userInterface.TellResults(City, DayTime.Night);
+                ProcessDay();
+                userInterface.TellResults(City, DayTime.Day);
+            }
+            
+            userInterface.TellGameResult(GetGameStatus());
         }
 
+        public WinState GetGameStatus() => Settings.WinCondition(City);
+        
         public void ProcessDay()
         {
             City.StartDay();
@@ -37,8 +53,12 @@ namespace Mafia.Domain
         {
             foreach (var role in City.Roles.Where(r => r.dayTime == dayTime)) 
             {
-                var target = userInterface.AskForInteractionTarget(City.Population.Where(p => p.Role == role), role);
+                var target = userInterface.AskForInteractionTarget(
+                    City.Population.Where(p => (dayTime==DayTime.Day?p.DayRole:p.NightRole) == role)
+                        .Where(person => person.IsAlive), 
+                    role, City);
                 role.Interact(target);
+                City.AddChange(target, role);
             }
         }
     }

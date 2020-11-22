@@ -6,5 +6,7 @@
         {
             person.TryKill();
         }
+
+        public PersonState ResultTargetState => PersonState.Killed;
     }
 }
