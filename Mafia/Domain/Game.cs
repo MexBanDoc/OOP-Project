@@ -31,11 +31,15 @@ namespace Mafia.Domain
 
         public void StartGame()
         {
+            userInterface.StartGame();
             while (Settings.WinCondition(City) == WinState.InProcess)
             {
                 ProcessNight();
+                userInterface.TellResults(City, DayTime.Night);
                 ProcessDay();
+                userInterface.TellResults(City, DayTime.Day);
             }
+            userInterface.TellGameResult(Settings.WinCondition(City));
         }
 
         public void ProcessDay()
@@ -49,9 +53,11 @@ namespace Mafia.Domain
             foreach (var role in City.Roles.Where(r => r.dayTime == dayTime)) 
             {
                 var target = userInterface.AskForInteractionTarget(
-                    City.Population.Where(p => (dayTime==DayTime.Day?p.DayRole:p.NightRole) == role), 
-                    role);
+                    City.Population.Where(p => (dayTime==DayTime.Day?p.DayRole:p.NightRole) == role)
+                        .Where(person => person.IsAlive), 
+                    role, City);
                 role.Interact(target);
+                City.AddChange(target, role);
             }
         }
     }

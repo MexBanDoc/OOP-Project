@@ -56,6 +56,7 @@
     <Compile Include="Domain\IPerson.cs" />
     <Compile Include="Domain\ISettings.cs" />
     <Compile Include="Domain\IUserInterface.cs" />
+    <Compile Include="Domain\PersonState.cs" />
     <Compile Include="Domain\Role.cs" />
     <Compile Include="Domain\Person.cs" />
     <Compile Include="Domain\Roles\HealerRole.cs" />

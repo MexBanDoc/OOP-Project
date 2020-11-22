@@ -1,19 +1,23 @@
 ﻿using System.Collections.Generic;
+using System.Data.SqlTypes;
 
 namespace Mafia.Domain
 {
     public class Person : IPerson
     {
-        public Person(Role dayRole, Role nightRole)
+        public Person(Role dayRole, Role nightRole, string name)
         {
             DayRole = dayRole;
             NightRole = nightRole;
+            Name = name;
         }
         
-        public void TryKill()
+        public bool TryKill()
         {
-            if (!IsImmortal)
-                IsAlive = false;
+            if (IsImmortal) return false;
+            IsAlive = false;
+            return true;
+
         }
 
         public void Heal()

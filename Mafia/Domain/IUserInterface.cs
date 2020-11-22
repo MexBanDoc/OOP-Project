@@ -5,10 +5,14 @@ namespace Mafia.Domain
 {
     public interface IUserInterface
     {
-        public IPerson AskForInteractionTarget(IEnumerable<IPerson> players, Role role);
+        public IPerson AskForInteractionTarget(IEnumerable<IPerson> players, Role role, ICity city);
 
-        public void StarGame();
-        
+        public void StartGame();
+
+        public void TellResults(ICity city, DayTime dayTime);
+
+        public void TellGameResult(WinState state);
+
         // allow players make random choice
     }
 }

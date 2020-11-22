@@ -27,7 +27,7 @@ namespace Mafia.Domain
             var nightRoles = nightDistribution.Multiply().ToList();
             for (int i = 0; i < TotalPlayers; i++)
                 yield return new Person(dayRoles.Count>i?dayRoles[i]:null,
-                    nightRoles.Count>i?nightRoles[i]:null);
+                    nightRoles.Count>i?nightRoles[i]:null, $"Person{i}");
         }
         
         public static Settings Default = new Settings(
@@ -36,8 +36,8 @@ namespace Mafia.Domain
                     var mafiaCount = city.Population.Count(p => p.NightRole is MafiaRole && p.IsAlive);
                     var totalCount = city.Population.Count(p => p.IsAlive);
                     if (mafiaCount == 0)
-                        return WinState.MafiaWins;
-                    if (totalCount - mafiaCount < mafiaCount)
+                        return WinState.PeacefulWins;
+                    if (totalCount > 1 && totalCount - mafiaCount == 1)
                         return WinState.MafiaWins;
                     return WinState.InProcess;
                 },
