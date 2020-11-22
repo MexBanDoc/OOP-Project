@@ -24,8 +24,24 @@ namespace Mafia.Domain
         public override bool Equals(object obj)
         {
             if (obj is Role role)
-                return Name.Equals(role.Name);
+                return Equals(role);
             return Equals(obj, this);
+        }
+
+        private bool Equals(Role other)
+        {
+            return Equals(interactions, other.interactions) && Name == other.Name && dayTime == other.dayTime;
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = (interactions != null ? interactions.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Name != null ? Name.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (int) dayTime;
+                return hashCode;
+            }
         }
 
         public abstract string Name { get; }

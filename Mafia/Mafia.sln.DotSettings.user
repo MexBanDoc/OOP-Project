@@ -4,5 +4,9 @@
   &lt;TestAncestor&gt;&#xD;
     &lt;TestId&gt;NUnit3x::BA3B5CD2-FDAC-40BF-8CA4-AE4559E45D70::.NETFramework,Version=v4.8::Tests.TestInfrastucture.TestLinq&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;NUnit3x::BA3B5CD2-FDAC-40BF-8CA4-AE4559E45D70::.NETFramework,Version=v4.8::TestMafia.Tests.Test1&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::BA3B5CD2-FDAC-40BF-8CA4-AE4559E45D70::.NETFramework,Version=v4.8::TestMafia.Tests.MafiaWins&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::BA3B5CD2-FDAC-40BF-8CA4-AE4559E45D70::.NETFramework,Version=v4.8::TestMafia.Tests.PeacefulWins&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::BA3B5CD2-FDAC-40BF-8CA4-AE4559E45D70::.NETFramework,Version=v4.8::TestMafia.Tests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::BA3B5CD2-FDAC-40BF-8CA4-AE4559E45D70::.NETFramework,Version=v4.8::Tests.IntegrationTests.Tests&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>

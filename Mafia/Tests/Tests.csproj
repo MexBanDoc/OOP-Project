@@ -50,11 +50,13 @@
     <ItemGroup>
         <Compile Include="IntegrationTests\Tests.cs" />
         <Compile Include="TestApp\TestTGBot.cs" />
+        <Compile Include="TestDomain\TestCity.cs" />
+        <Compile Include="TestDomain\TestGame.cs" />
+        <Compile Include="TestDomain\TestPerson.cs" />
+        <Compile Include="TestDomain\TestRole.cs" />
+        <Compile Include="TestDomain\TestSettings.cs" />
         <Compile Include="TestInfrastucture\TestLinq.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
-    </ItemGroup>
-    <ItemGroup>
-      <Folder Include="TestDomain" />
     </ItemGroup>
     <ItemGroup>
       <ProjectReference Include="..\Mafia.csproj">

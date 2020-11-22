@@ -26,22 +26,27 @@ namespace Mafia.Domain
             var dayRoles = dayDistribution.Multiply().ToList();
             var nightRoles = nightDistribution.Multiply().ToList();
             for (int i = 0; i < TotalPlayers; i++)
-                yield return new Person(dayRoles.Count>i?dayRoles[i]:null,
-                    nightRoles.Count>i?nightRoles[i]:null, $"Person{i}");
+                yield return new Person(dayRoles.Count > i ? dayRoles[i] : null,
+                    nightRoles.Count > i ? nightRoles[i] : null, $"Person{i}");
         }
+
+        public static readonly Func<ICity, WinState> DefaultWinCondition = (city) =>
+        {
+            var mafiaCount = city.Population.Count(p => p.NightRole is MafiaRole && p.IsAlive);
+            var totalCount = city.Population.Count(p => p.IsAlive);
+            if (mafiaCount == 0)
+                return WinState.PeacefulWins;
+            if (totalCount > 1 && totalCount - mafiaCount == 1)
+                return WinState.MafiaWins;
+            return WinState.InProcess;
+        };
         
-        public static Settings Default = new Settings(
-            (city) =>
-                {
-                    var mafiaCount = city.Population.Count(p => p.NightRole is MafiaRole && p.IsAlive);
-                    var totalCount = city.Population.Count(p => p.IsAlive);
-                    if (mafiaCount == 0)
-                        return WinState.PeacefulWins;
-                    if (totalCount > 1 && totalCount - mafiaCount == 1)
-                        return WinState.MafiaWins;
-                    return WinState.InProcess;
-                },
-            new List<Tuple<Role, int>>{Tuple.Create((Role)new MafiaRole(), 1), Tuple.Create((Role)new CitizenRole(), 4)},
+        public static readonly Settings Default = new Settings(DefaultWinCondition,
+            new List<Tuple<Role, int>>
+                {Tuple.Create((Role) new MafiaRole(), 1), Tuple.Create((Role) new CitizenRole(), 4)},
             4);
-    }
+
+        
+
+}
 }

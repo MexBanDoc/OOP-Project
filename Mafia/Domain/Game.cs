@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using Mafia.Infrastructure;
 
 namespace Mafia.Domain
 {
@@ -32,16 +30,19 @@ namespace Mafia.Domain
         public void StartGame()
         {
             userInterface.StartGame();
-            while (Settings.WinCondition(City) == WinState.InProcess)
+            while (GetGameStatus() == WinState.InProcess)
             {
                 ProcessNight();
                 userInterface.TellResults(City, DayTime.Night);
                 ProcessDay();
                 userInterface.TellResults(City, DayTime.Day);
             }
-            userInterface.TellGameResult(Settings.WinCondition(City));
+            
+            userInterface.TellGameResult(GetGameStatus());
         }
 
+        public WinState GetGameStatus() => Settings.WinCondition(City);
+        
         public void ProcessDay()
         {
             City.StartDay();
