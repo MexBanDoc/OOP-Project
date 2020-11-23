@@ -7,13 +7,9 @@ namespace Mafia.Infrastructure
     {
         public static IEnumerable<T> Multiply<T>(this IEnumerable<Tuple<T, int>> iEnumerable)
         {
-            foreach (var t in iEnumerable)
-            {
-                var item = t.Item1;
-                var count = t.Item2;
-                for (int j = 0; j < count; j++)
+            foreach (var (item, count) in iEnumerable)
+                for (var j = 0; j < count; j++)
                     yield return item;
-            }
         }
     }
 }
