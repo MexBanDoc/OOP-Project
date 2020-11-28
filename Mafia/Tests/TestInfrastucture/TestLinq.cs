@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
 using NUnit.Framework;
-using NUnit.Framework.Constraints;
 
 namespace Tests.TestInfrastucture
 {
@@ -14,18 +13,18 @@ namespace Tests.TestInfrastucture
         {
             get
             {
-                yield return new TestCaseData(null, null);
-                yield return new TestCaseData(new (string, int)[0], new string[0]);
-                yield return new TestCaseData(new[] { ("peace", 1)}, new []{"peace"});
-                yield return new TestCaseData(new[] { ("peace", 2), ("mafia", 2) },
+                yield return new TestCaseData(new Tuple<string, int>[0], new string[0]);
+                yield return new TestCaseData(new[] { Tuple.Create("peace", 1)}, new []{"peace"});
+                yield return new TestCaseData(new[] { Tuple.Create("peace", 2), Tuple.Create("mafia", 2) },
                     new []{"peace", "peace", "mafia", "mafia"});
-                yield return new TestCaseData(new[] {("peace", 0), ("mafia", 1), ("doctor", 3)},
+                yield return new TestCaseData(new[]
+                        {Tuple.Create("peace", 0), Tuple.Create("mafia", 1), Tuple.Create("doctor", 3)},
                     new[] {"mafia", "doctor", "doctor", "doctor"});
             }
         }
 
         [TestCaseSource("TestLinqCases")]
-        public void Multiply(IEnumerable<Tuple<string, int>> input, string[] result)
+        public void MultiplySuccess(IEnumerable<Tuple<string, int>> input, string[] result)
         {
             
             var output = Mafia.Infrastructure.MoreLinq.Multiply(input).ToArray();
@@ -33,6 +32,16 @@ namespace Tests.TestInfrastucture
                                                     "which is the first element in tuple as many times as second value" +
                                                     "in tuple says");
             output.Should().Equal(result);
+        }
+
+        [Test]
+        public void MultiplyErrors()
+        {
+            ((Action)(() =>
+                {
+                    foreach (var s in Mafia.Infrastructure.MoreLinq.Multiply<string>(null)) {}
+                }))
+                .Should().Throw<NullReferenceException>();
         }
     }
 }
