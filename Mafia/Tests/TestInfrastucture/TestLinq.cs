@@ -6,47 +6,25 @@ using NUnit.Framework;
 
 namespace Tests.TestInfrastucture
 {
+    [TestFixture]
     public class TestLinq
     {
-        private static IEnumerable<(string, int)[]> Tuples
+        public static IEnumerable<TestCaseData> TestLinqCases
         {
             get
             {
-                yield return new[] { ("peace", 2), ("mafia", 2) };
+                yield return new TestCaseData(new Tuple<string, int>[0], new string[0]);
+                yield return new TestCaseData(new[] { Tuple.Create("peace", 1)}, new []{"peace"});
+                yield return new TestCaseData(new[] { Tuple.Create("peace", 2), Tuple.Create("mafia", 2) },
+                    new []{"peace", "peace", "mafia", "mafia"});
+                yield return new TestCaseData(new[]
+                        {Tuple.Create("peace", 0), Tuple.Create("mafia", 1), Tuple.Create("doctor", 3)},
+                    new[] {"mafia", "doctor", "doctor", "doctor"});
             }
         }
-        
-        private static IEnumerable<(string, int)[]> EmptyTuples
-        {
-            get
-            {
-                yield return new (string, int)[0];
-            }
-        }
-        
-        private static IEnumerable<(string, int)[]> UniqueTuple
-        {
-            get
-            {
-                yield return new[] { ("peace", 1)};
-            }
-        }
-        
-        private static IEnumerable<(string, int)[]> UniqueEmptyTuple
-        {
-            get
-            {
-                yield return new[] { ("peace", 0)};
-            }
-        }
-        
-        
-        [TestCase(null, null)]
-        [TestCase(nameof(EmptyTuples), new string[0])]
-        [TestCase(nameof(UniqueTuple), new []{"peace"})]
-        [TestCase(nameof(UniqueEmptyTuple), new string[0])]
-        [TestCase(nameof(Tuples), new []{"peace", "peace", "mafia", "mafia"})]
-        public void Multiply<T>(IEnumerable<Tuple<T, int>> input, T[] result)
+
+        [TestCaseSource("TestLinqCases")]
+        public void MultiplySuccess(IEnumerable<Tuple<string, int>> input, string[] result)
         {
             
             var output = Mafia.Infrastructure.MoreLinq.Multiply(input).ToArray();
@@ -54,6 +32,16 @@ namespace Tests.TestInfrastucture
                                                     "which is the first element in tuple as many times as second value" +
                                                     "in tuple says");
             output.Should().Equal(result);
+        }
+
+        [Test]
+        public void MultiplyErrors()
+        {
+            ((Action)(() =>
+                {
+                    foreach (var s in Mafia.Infrastructure.MoreLinq.Multiply<string>(null)) {}
+                }))
+                .Should().Throw<NullReferenceException>();
         }
     }
 }

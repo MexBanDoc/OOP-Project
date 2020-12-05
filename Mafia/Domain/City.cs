@@ -25,9 +25,8 @@ namespace Mafia.Domain
         }
 
         public IPerson GetPersonByName(string name)
-        {
-            return Population.First(person => person.Name.Equals(name));
-        }
+            => Population.FirstOrDefault(person => person.Name.Equals(name));
+        
 
         public void StartNight()
         {

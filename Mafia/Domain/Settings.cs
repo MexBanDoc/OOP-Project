@@ -45,8 +45,5 @@ namespace Mafia.Domain
             new List<Tuple<Role, int>>
                 {Tuple.Create((Role) new MafiaRole(), 1), Tuple.Create((Role) new CitizenRole(), 4)},
             4);
-
-        
-
-}
+    }
 }
