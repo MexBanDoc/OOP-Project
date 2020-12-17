@@ -14,6 +14,7 @@ namespace Mafia.Domain
 
         public Settings(Func<ICity, WinState> winCondition, List<Tuple<Role, int>> playerDistribution, int totalPlayers)
         {
+            // playerDistribution is not clear (it is of course count, but it took 20 minutes and lot of reference searching)
             WinCondition = winCondition;
             PlayerDistribution = playerDistribution;
             TotalPlayers = totalPlayers;
