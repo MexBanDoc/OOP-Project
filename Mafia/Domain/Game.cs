@@ -29,7 +29,6 @@ namespace Mafia.Domain
 
         public void StartGame()
         {
-            userInterface.StartGame();
             while (GetGameStatus() == WinState.InProcess)
             {
                 ProcessNight();
@@ -38,7 +37,7 @@ namespace Mafia.Domain
                 userInterface.TellResults(City, DayTime.Day);
             }
             
-            userInterface.TellGameResult(GetGameStatus());
+            userInterface.TellGameResult(GetGameStatus(), City);
         }
 
         public WinState GetGameStatus() => Settings.WinCondition(City);
