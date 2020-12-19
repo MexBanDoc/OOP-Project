@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Mafia.Domain;
 using Telegram.Bot;
@@ -35,17 +36,38 @@ namespace Mafia.App
             {
                 Bot.SendTextMessageAsync(chatId, "Город просыпается").Wait();
             }
-            var victims = new List<IPerson>();
-            foreach (var player in players)
+            
+            var choosers = players.ToHashSet();
+            var targets = city.Population
+                .Where(p => !choosers.Contains(p))
+                .Select(p => p.Name).ToArray();
+            
+            var pollMessages = new List<Message>();
+
+            foreach (var personalChatId in choosers.Select(chooser => PersonToChat[chooser]))
             {
-                // Bot.SendTextMessageAsync(chatId, $"Просыпается {role.Name} {player.Name}").Wait(); // TODO: delete?
-                // var name = city.Population
-                //     .Where(person => person.NightRole is null || !person.NightRole.Equals(role))
-                //     .First(person => person.IsAlive).Name;
-                // victims.Add(city.GetPersonByName(name));
-                // TODO: implement
+                pollMessages.Add(Bot.SendPollAsync(personalChatId, "Who will be your target?", targets).Result);
             }
             
+            Thread.Sleep(600000); // TODO: 10 minutes, change if long
+
+            var victims = new List<IPerson>();
+            foreach (var pollMessage in pollMessages)
+            {
+                var poll = pollMessage.Poll;
+                string victim = null;
+                var maxVotes = 0;
+                foreach (var pollOption in poll.Options)
+                {
+                    if (pollOption.VoterCount >= maxVotes)
+                    {
+                        maxVotes = pollOption.VoterCount;
+                        victim = pollOption.Text;
+                    }
+                }
+                victims.Add(city.GetPersonByName(victim));
+            }
+
             return victims[new Random().Next(victims.Count - 1)];
         }
 
@@ -255,7 +277,7 @@ namespace Mafia.App
             return new Person(dayRole, nightRole, name);
         }
 
-        public IEnumerable<KeyValuePair<long, IPerson>> ExtractPersons() // TODO: redo
+        public IEnumerable<KeyValuePair<long, IPerson>> ExtractPersons()
         {
             IsOpen = false;
             return players;
