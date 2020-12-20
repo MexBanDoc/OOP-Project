@@ -29,7 +29,7 @@ namespace Mafia.App
         {
             if (!cityToChat.ContainsKey(city))
             {
-                return null; // TODO: reduce dangerous code
+                return null;
             }
             var chatId = cityToChat[city];
             
@@ -41,92 +41,96 @@ namespace Mafia.App
 
             if (role.dayTime == DayTime.Night)
             {
-                if (!isCityAsleep)
-                {
-                    bot.SendTextMessageAsync(chatId, "Город засыпает").Wait();
-                    isCityAsleep = true;
-                }
-
-                bot.SendTextMessageAsync(chatId, $"Просыпается {role.Name}");
-
-                var targets = city.Population
-                    .Where(p => p.IsAlive)
-                    .Where(p => !choosers.Contains(p))
-                    .Select(p => p.Name)
-                    .ToArray();
-                
-                switch (targets.Length)
-                {
-                    case 0:
-                        return null;
-                    case 1:
-                        return city.GetPersonByName(targets[0]);
-                }
-
-                var pollMessages = new List<Message>();
-
-                foreach (var chooser in choosers)
-                {
-                    var userId = personToChat[chooser];
-                    var message = bot.SendPollAsync(userId, "Who will be your target? N", targets).Result;
-                    pollMessages.Add(message);
-                }
-
-                Thread.Sleep(30 * 1000);
-
-                var votedTargets = new List<IPerson>();
-                foreach (var message in pollMessages)
-                {
-                    var poll = bot.StopPollAsync(message.Chat.Id, message.MessageId).Result;
-
-                    foreach (var option in poll.Options)
-                    {
-                        bot.SendTextMessageAsync(chatId, $"{option.Text} chosen by {option.VoterCount}").Wait();
-                    }
-                    
-                    bot.SendTextMessageAsync(chatId, $"Total votes {poll.TotalVoterCount}").Wait();
-                    
-                    var winner = poll.Options.OrderBy(option => option.VoterCount).Last().Text;
-
-                    votedTargets.Add(city.GetPersonByName(winner));
-                }
-
-                if (votedTargets.Count == 0)
-                {
-                    return null;
-                }
-
-                var result = votedTargets[Math.Max(0, random.Next(votedTargets.Count) - 1)];
-                bot.SendTextMessageAsync(chatId, $"{role.Name} chosen {result.Name}").Wait();
-
-                return result;
+                return AskRoleForInteractionTarget(role, city, chatId, choosers);
             }
 
-            {
-                isCityAsleep = false;
-                bot.SendTextMessageAsync(chatId, "Город просыпается").Wait();
+            return AskJudgedPerson(role, city, chatId, choosers);
+        }
 
-                bot.SendTextMessageAsync(chatId, $"Choosers {choosers.Count}").Wait();
-                if (choosers.Count < 2)
-                {
+        private IPerson AskRoleForInteractionTarget(Role role, ICity city, long chatId, HashSet<IPerson> choosers)
+        {
+            if (!isCityAsleep)
+            {
+                bot.SendTextMessageAsync(chatId, "Город засыпает").Wait();
+                isCityAsleep = true;
+            }
+
+            bot.SendTextMessageAsync(chatId, $"Просыпается {role.Name}");
+
+            var targets = city.Population
+                .Where(p => p.IsAlive)
+                .Where(p => !choosers.Contains(p))
+                .Select(p => p.Name)
+                .ToArray();
+
+            switch (targets.Length)
+            {
+                case 0:
                     return null;
-                }
-                
-                var message = bot.SendPollAsync(chatId, "Who will you judge?", choosers.Select(p => p.Name), isAnonymous:false).Result;
-                Thread.Sleep(60 * 1000); // TODO: 1 minute, change if long
-                var poll = bot.StopPollAsync(chatId, message.MessageId).Result;
-                
+                case 1:
+                    return city.GetPersonByName(targets[0]);
+            }
+
+            var pollMessages = choosers
+                .Select(chooser => personToChat[chooser])
+                .Select(userId => bot.SendPollAsync(userId, "Who will be your target?", targets).Result)
+                .ToList();
+
+            Thread.Sleep(30 * 1000);
+
+            var votedTargets = new List<IPerson>();
+            foreach (var poll in pollMessages.Select(message => bot.StopPollAsync(message.Chat.Id, message.MessageId).Result))
+            {
                 foreach (var option in poll.Options)
                 {
                     bot.SendTextMessageAsync(chatId, $"{option.Text} chosen by {option.VoterCount}").Wait();
                 }
-                    
+
                 bot.SendTextMessageAsync(chatId, $"Total votes {poll.TotalVoterCount}").Wait();
 
                 var winner = poll.Options.OrderBy(option => option.VoterCount).Last().Text;
 
-                return city.GetPersonByName(winner);
+                votedTargets.Add(city.GetPersonByName(winner));
             }
+
+            if (votedTargets.Count == 0)
+            {
+                return null;
+            }
+
+            var result = votedTargets[Math.Max(0, random.Next(votedTargets.Count) - 1)];
+            bot.SendTextMessageAsync(chatId, $"{role.Name} chosen {result.Name}").Wait();
+
+            return result;
+        }
+
+        private IPerson AskJudgedPerson(Role role, ICity city, long chatId, HashSet<IPerson> choosers)
+        {
+            isCityAsleep = false;
+            bot.SendTextMessageAsync(chatId, "Город просыпается").Wait();
+
+            bot.SendTextMessageAsync(chatId, $"Choosers {choosers.Count}").Wait();
+            if (choosers.Count < 2)
+            {
+                return null;
+            }
+
+            var message = bot.SendPollAsync(chatId, "Who will you judge?", choosers.Select(p => p.Name), isAnonymous: false).Result;
+            
+            Thread.Sleep(60 * 1000);
+            
+            var poll = bot.StopPollAsync(chatId, message.MessageId).Result;
+
+            foreach (var option in poll.Options)
+            {
+                bot.SendTextMessageAsync(chatId, $"{option.Text} chosen by {option.VoterCount}").Wait();
+            }
+
+            bot.SendTextMessageAsync(chatId, $"Total votes {poll.TotalVoterCount}").Wait();
+
+            var winner = poll.Options.OrderBy(option => option.VoterCount).Last().Text;
+
+            return city.GetPersonByName(winner);
         }
 
         public async void TellResults(ICity city, DayTime dayTime)
