@@ -51,19 +51,36 @@ namespace Mafia.Domain
 
         private void DoInteractions(DayTime dayTime)
         {
-            foreach (var role in City.Roles.Where(r => r.dayTime == dayTime)) 
+            if (dayTime == DayTime.Day)
             {
-                var target = userInterface.AskForInteractionTarget(
-                    City.Population
-                        .Where(p => (dayTime == DayTime.Day ? p.DayRole : p.NightRole) == role)
-                        .Where(person => person.IsAlive),
-                    role, City);
+                var role = new CitizenRole();
+                var target = userInterface.AskForInteractionTarget(City.Population, role, City);
                 if (target == null)
                 {
-                    continue;
+                    return;
                 }
-                role.Interact(target);
                 City.AddChange(target, role);
+            }
+            else
+            {
+                foreach (var role in City.Roles.Where(r => r.dayTime == dayTime)) 
+                {
+                    var target = userInterface.AskForInteractionTarget(
+                        City.Population
+                            .Where(p => (dayTime == DayTime.Day ? p.DayRole : p.NightRole) == role)
+                            .Where(person => person.IsAlive),
+                        role, City);
+                    if (target == null)
+                    {
+                        continue;
+                    }
+                    City.AddChange(target, role);
+                }
+            }
+
+            foreach (var cityLastChange in City.LastChanges.Where(cityLastChange => cityLastChange.Value == PersonState.Killed))
+            {
+                cityLastChange.Key.TryKill();
             }
         }
     }

@@ -8,7 +8,7 @@ namespace Mafia.Domain
         {
         }
 
-        public override string Name { get; } = "Гражданин";
+        public override string Name { get; } = "Peaceful";
         public override DayTime dayTime { get; } = DayTime.Day;
     }
 }
