@@ -136,63 +136,33 @@ namespace Mafia.App
             var chat = message.Chat;
             var user = message.From;
 
-            await Bot.SendTextMessageAsync(chat.Id, $"Chat.Id: {chat.Id}\nUser: {user.Id}");
+            // await Bot.SendTextMessageAsync(chat.Id, $"Chat.Id: {chat.Id}\nUser: {user.Id}");
 
             if (message.Text == StartGameCommand)
             {
-                if (PlayersPools.ContainsKey(chat.Id))
-                {
-                    await Bot.SendTextMessageAsync(chat.Id, "Game record already has started!");
-                    return;
-                }
-                
-                var pool = new PlayersPool();
-                PlayersPools[chat.Id] = pool;
-                
-                await Bot.SendTextMessageAsync(chat.Id, "Record to game started!");
+                await StartGameMethod(chat.Id);
+                await PlayMethod(chat.Id, user.Id);
             }
 
             if (message.Text == PlayCommand)
             {
-                if (!PlayersPools.ContainsKey(chat.Id))
-                {
-                    await Bot.SendTextMessageAsync(chat.Id, $"There no opened game record\nType {StartGameCommand} to start one");
-                }
-
-                var pool = PlayersPools[chat.Id];
-
-                if (!pool.IsOpen)
-                {
-                    await Bot.SendTextMessageAsync(chat.Id, "Sorry, record is end up");
-                    return;
-                }
-
-                var added = pool.AddPlayerAsync(user.Id);
-
-                if (added)
-                {
-                    await Bot.SendTextMessageAsync(chat.Id, "Successfully join game!");
-                }
-                else
-                {
-                    await Bot.SendTextMessageAsync(chat.Id, "Already joined game");
-                }
+                await PlayMethod(chat.Id, user.Id);
             }
 
             if (message.Text == EndRecordCommand)
             {
                 var population = new List<IPerson>();
-                if (PlayersPools.TryRemove(chat.Id, out var pool))
-                {
-                    foreach (var keyValuePair in pool.ExtractPersons())
-                    {
-                        population.Add(keyValuePair.Value);
-                        PersonToChat[keyValuePair.Value] = keyValuePair.Key;
-                    }
-                }
-                else
+                if (!PlayersPools.ContainsKey(chat.Id))
                 {
                     await Bot.SendTextMessageAsync(chat.Id, $"There no opened game record\nType {StartGameCommand} to start one");
+                    return;
+                }
+
+                PlayersPools.TryRemove(chat.Id, out var pool);
+                foreach (var keyValuePair in pool.ExtractPersons())
+                {
+                    population.Add(keyValuePair.Value);
+                    PersonToChat[keyValuePair.Value] = keyValuePair.Key;
                 }
                 
                 var settings = Settings.Default;
@@ -205,7 +175,49 @@ namespace Mafia.App
             
             if (message.Text == "/help")
             {
-               await Bot.SendTextMessageAsync(chat.Id, "Technical problems");
+               await Bot.SendTextMessageAsync(chat.Id, $"{StartGameCommand} - press to start a game\n{PlayCommand} - add self to game\n{EndRecordCommand} - end recording players and start game already\n/help - this message");
+            }
+        }
+
+        private async Task StartGameMethod(long chatId)
+        {
+            if (PlayersPools.ContainsKey(chatId))
+            {
+                await Bot.SendTextMessageAsync(chatId, "Game record already has started!");
+                return;
+            }
+                
+            var pool = new PlayersPool();
+            PlayersPools[chatId] = pool;
+                
+            await Bot.SendTextMessageAsync(chatId, "Record to game started!");
+        }
+
+        private async Task PlayMethod(long chatId, long userId)
+        {
+            if (!PlayersPools.ContainsKey(chatId))
+            {
+                await Bot.SendTextMessageAsync(chatId, $"There no opened game record\nType {StartGameCommand} to start one");
+                return;
+            }
+
+            var pool = PlayersPools[chatId];
+
+            if (!pool.IsOpen)
+            {
+                await Bot.SendTextMessageAsync(chatId, "Sorry, record is end up");
+                return;
+            }
+
+            var added = pool.AddPlayerAsync(userId);
+
+            if (added)
+            {
+                await Bot.SendTextMessageAsync(chatId, "Successfully join game!");
+            }
+            else
+            {
+                await Bot.SendTextMessageAsync(chatId, "Already joined game");
             }
         }
 
