@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Data.SqlTypes;
-
-namespace Mafia.Domain
+﻿namespace Mafia.Domain
 {
     public class Person : IPerson
     {
@@ -27,7 +24,7 @@ namespace Mafia.Domain
         }
 
         public bool IsAlive { get; private set; } = true;
-        public bool IsImmortal { get; set; } = false;
+        public bool IsImmortal { get; set; }
         public Role DayRole { get; }
         public Role NightRole { get; }
 

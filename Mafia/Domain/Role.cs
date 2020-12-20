@@ -30,21 +30,21 @@ namespace Mafia.Domain
 
         private bool Equals(Role other)
         {
-            return Equals(interactions, other.interactions) && Name == other.Name && dayTime == other.dayTime;
+            return Equals(interactions, other.interactions) && Name == other.Name && DayTime == other.DayTime;
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                var hashCode = (interactions != null ? interactions.GetHashCode() : 0);
+                var hashCode = interactions != null ? interactions.GetHashCode() : 0;
                 hashCode = (hashCode * 397) ^ (Name != null ? Name.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (int) dayTime;
+                hashCode = (hashCode * 397) ^ (int) DayTime;
                 return hashCode;
             }
         }
 
         public abstract string Name { get; }
-        public abstract DayTime dayTime { get; }
+        public abstract DayTime DayTime { get; }
     }
 }

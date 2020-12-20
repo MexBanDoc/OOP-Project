@@ -39,7 +39,7 @@ namespace Mafia.App
                 return null;
             }
 
-            if (role.dayTime == DayTime.Night)
+            if (role.DayTime == DayTime.Night)
             {
                 return AskRoleForInteractionTarget(role, city, chatId, choosers);
             }

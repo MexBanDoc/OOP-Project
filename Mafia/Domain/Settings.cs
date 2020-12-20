@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Mafia.Infrastructure;
@@ -14,7 +13,6 @@ namespace Mafia.Domain
 
         public Settings(Func<ICity, WinState> winCondition, List<Tuple<Role, int>> playerDistribution, int totalPlayers)
         {
-            // playerDistribution is not clear (it is of course count, but it took 20 minutes and lot of reference searching)
             WinCondition = winCondition;
             PlayerDistribution = playerDistribution;
             TotalPlayers = totalPlayers;
@@ -22,8 +20,8 @@ namespace Mafia.Domain
 
         public IEnumerable<IPerson> GeneratePopulation()
         {
-            var dayDistribution = PlayerDistribution.Where(t => t.Item1.dayTime == DayTime.Day);
-            var nightDistribution = PlayerDistribution.Where(t => t.Item1.dayTime == DayTime.Night);
+            var dayDistribution = PlayerDistribution.Where(t => t.Item1.DayTime == DayTime.Day);
+            var nightDistribution = PlayerDistribution.Where(t => t.Item1.DayTime == DayTime.Night);
             var dayRoles = dayDistribution.Multiply().ToList();
             var nightRoles = nightDistribution.Multiply().ToList();
             for (int i = 0; i < TotalPlayers; i++)

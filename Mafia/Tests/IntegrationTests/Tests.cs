@@ -14,7 +14,7 @@ namespace Tests.IntegrationTests
         {
             public IPerson AskForInteractionTarget(IEnumerable<IPerson> players, Role role, ICity city)
             {
-                if (role.dayTime == DayTime.Night)
+                if (role.DayTime == DayTime.Night)
                     Console.WriteLine("Город засыпает");
                 else 
                     Console.WriteLine("Город просыпается");
