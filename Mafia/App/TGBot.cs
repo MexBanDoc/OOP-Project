@@ -7,19 +7,19 @@ using System.Threading.Tasks;
 using Mafia.Domain;
 using Telegram.Bot;
 using Telegram.Bot.Args;
-using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Game = Mafia.Domain.Game;
 
 namespace Mafia.App
 {
-    public class TGBot : IUserInterface
+    public class TgBot : IUserInterface
     {
         private readonly TelegramBotClient bot;
         
         private readonly Random random = new Random();
 
-        private readonly ConcurrentDictionary<long, IPlayersPool> playersPools = new ConcurrentDictionary<long, IPlayersPool>();
+        private readonly ConcurrentDictionary<long, IPlayersPool> playersPools =
+            new ConcurrentDictionary<long, IPlayersPool>();
         private readonly ConcurrentDictionary<IPerson, long> personToChat = new ConcurrentDictionary<IPerson, long>();
         private readonly ConcurrentDictionary<ICity, long> cityToChat = new ConcurrentDictionary<ICity, long>();
 
@@ -27,24 +27,16 @@ namespace Mafia.App
         
         public IPerson AskForInteractionTarget(IEnumerable<IPerson> players, Role role, ICity city)
         {
-            if (!cityToChat.ContainsKey(city))
-            {
-                return null;
-            }
+            if (!cityToChat.ContainsKey(city)) return null;
+
             var chatId = cityToChat[city];
-            
+
             var choosers = players.ToHashSet();
-            if (choosers.Count == 0)
-            {
-                return null;
-            }
+            if (choosers.Count == 0) return null;
 
-            if (role.DayTime == DayTime.Night)
-            {
-                return AskRoleForInteractionTarget(role, city, chatId, choosers);
-            }
-
-            return AskJudgedPerson(role, city, chatId, choosers);
+            return role.DayTime == DayTime.Night
+                ? AskRoleForInteractionTarget(role, city, chatId, choosers)
+                : AskJudgedPerson(city, chatId, choosers);
         }
 
         private IPerson AskRoleForInteractionTarget(Role role, ICity city, long chatId, HashSet<IPerson> choosers)
@@ -104,7 +96,7 @@ namespace Mafia.App
             return result;
         }
 
-        private IPerson AskJudgedPerson(Role role, ICity city, long chatId, HashSet<IPerson> choosers)
+        private IPerson AskJudgedPerson(ICity city, long chatId, HashSet<IPerson> choosers)
         {
             isCityAsleep = false;
             bot.SendTextMessageAsync(chatId, "Город просыпается").Wait();
@@ -170,7 +162,7 @@ namespace Mafia.App
             }
         }
 
-        public TGBot()
+        public TgBot()
         {
             var token = Environment.GetEnvironmentVariable("TGBotToken");
             // if (token == null)
@@ -327,64 +319,6 @@ namespace Mafia.App
                 personToChat.TryRemove(person, out var personChat);
                 Console.WriteLine($"Successfully removed city {person} with chat.Id {personChat}");
             }
-        }
-    }
-
-    public interface IPlayersPool
-    {
-        bool IsOpen { get; }
-        bool AddPlayerAsync(long playerId);
-        IEnumerable<KeyValuePair<long, IPerson>> ExtractPersons();
-    }
-
-    public class PlayersPool : IPlayersPool
-    {
-        private static readonly List<string> Names = new List<string>{
-            "Liam", "Olivia", "Noah", "Emma",
-            "Oliver", "Ava", "William", "Sophia",
-            "Elijah", "Isabella", "James", "Charlotte",
-            "Benjamin", "Amelia", "Lucas", "Mia",
-            "Mason", "Harper", "Ethan", "Evelyn"
-        };
-        
-        public bool IsOpen { get; private set; } = true;
-        
-        private readonly Random random = new Random();
-        private readonly ConcurrentDictionary<long, IPerson> players = new ConcurrentDictionary<long, IPerson>();
-
-        public bool AddPlayerAsync(long playerId)
-        {
-            if (players.ContainsKey(playerId))
-            {
-                return false;
-            }
-
-            var person = CreatePerson();
-            players[playerId] = person;
-            return true;
-        }
-
-        private IPerson CreatePerson()
-        {
-            var dayRole = new CitizenRole();
-            var index = players.Count % 3; // count of inheritors of Role
-            Role nightRole = index switch // TODO: make this cool
-            {
-                1 => new MafiaRole(),
-                2 => new HealerRole(),
-                _ => null
-            };
-
-            var name = Names[random.Next(0, Names.Count)];
-            Names.Remove(name);
-            
-            return new Person(dayRole, nightRole, name);
-        }
-
-        public IEnumerable<KeyValuePair<long, IPerson>> ExtractPersons()
-        {
-            IsOpen = false;
-            return players;
         }
     }
 }
