@@ -4,7 +4,7 @@ namespace Mafia.Domain
 {
     public class MafiaRole : Role
     {
-        public MafiaRole() : base(new List<IInteraction>{new KillInteraction(), new VoteInteraction()})
+        public MafiaRole() : base(new List<IInteraction>{new KillInteraction()})
         {
         }
 

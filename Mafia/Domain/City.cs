@@ -8,7 +8,6 @@ namespace Mafia.Domain
         public ICollection<IPerson> Population { get; }
         public ICollection<Role> Roles { get; } = new HashSet<Role>();
         public DayTime DayTime { get; private set; }
-        
         public Dictionary<IPerson, PersonState> LastChanges { get; private set; }
         
         public City(ICollection<IPerson> population)
@@ -46,13 +45,8 @@ namespace Mafia.Domain
 
         public void AddChange(IPerson target, Role role)
         {
-            if (LastChanges.ContainsKey(target))
+            if (LastChanges.ContainsKey(target) && LastChanges[target] != PersonState.Immortal)
             {
-                if (LastChanges[target] == PersonState.Immortal)
-                {
-                    return;
-                }
-
                 LastChanges[target] = role.ResultTargetState;
                 return;
             }
