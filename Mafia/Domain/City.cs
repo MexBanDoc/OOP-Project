@@ -46,6 +46,16 @@ namespace Mafia.Domain
 
         public void AddChange(IPerson target, Role role)
         {
+            if (LastChanges.ContainsKey(target))
+            {
+                if (LastChanges[target] == PersonState.Immortal)
+                {
+                    return;
+                }
+
+                LastChanges[target] = role.ResultTargetState;
+                return;
+            }
             LastChanges.Add(target, role.ResultTargetState);
         }
     }

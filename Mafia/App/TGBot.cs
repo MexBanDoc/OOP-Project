@@ -15,95 +15,151 @@ namespace Mafia.App
 {
     public class TGBot : IUserInterface
     {
-        private TelegramBotClient Bot;
+        private readonly TelegramBotClient bot;
+        
+        private readonly Random random = new Random();
 
-        private static readonly ConcurrentDictionary<long, IPlayersPool> PlayersPools = new ConcurrentDictionary<long, IPlayersPool>();
-        private static readonly ConcurrentDictionary<IPerson, long> PersonToChat = new ConcurrentDictionary<IPerson, long>();
-        private static readonly ConcurrentDictionary<ICity, long> CityToChat = new ConcurrentDictionary<ICity, long>();
+        private readonly ConcurrentDictionary<long, IPlayersPool> playersPools = new ConcurrentDictionary<long, IPlayersPool>();
+        private readonly ConcurrentDictionary<IPerson, long> personToChat = new ConcurrentDictionary<IPerson, long>();
+        private readonly ConcurrentDictionary<ICity, long> cityToChat = new ConcurrentDictionary<ICity, long>();
+
+        private bool isCityAsleep = false;
         
         public IPerson AskForInteractionTarget(IEnumerable<IPerson> players, Role role, ICity city)
         {
-            if (!CityToChat.ContainsKey(city))
+            if (!cityToChat.ContainsKey(city))
+            {
+                return null; // TODO: reduce dangerous code
+            }
+            var chatId = cityToChat[city];
+            
+            var choosers = players.ToHashSet();
+            if (choosers.Count == 0)
             {
                 return null;
             }
-            var chatId = CityToChat[city];
+
             if (role.dayTime == DayTime.Night)
             {
-                Bot.SendTextMessageAsync(chatId, "Город засыпает").Wait();
-            }
-            else
-            {
-                Bot.SendTextMessageAsync(chatId, "Город просыпается").Wait();
-            }
-            
-            var choosers = players.ToHashSet();
-            var targets = city.Population
-                .Where(p => !choosers.Contains(p))
-                .Select(p => p.Name).ToArray();
-            
-            var pollMessages = new List<Message>();
-
-            foreach (var personalChatId in choosers.Select(chooser => PersonToChat[chooser]))
-            {
-                pollMessages.Add(Bot.SendPollAsync(personalChatId, "Who will be your target?", targets).Result);
-            }
-            
-            Thread.Sleep(600000); // TODO: 10 minutes, change if long
-
-            var victims = new List<IPerson>();
-            foreach (var pollMessage in pollMessages)
-            {
-                var poll = pollMessage.Poll;
-                string victim = null;
-                var maxVotes = 0;
-                foreach (var pollOption in poll.Options)
+                if (!isCityAsleep)
                 {
-                    if (pollOption.VoterCount >= maxVotes)
+                    bot.SendTextMessageAsync(chatId, "Город засыпает").Wait();
+                    isCityAsleep = true;
+                }
+
+                bot.SendTextMessageAsync(chatId, $"Просыпается {role.Name}");
+
+                var targets = city.Population
+                    .Where(p => p.IsAlive)
+                    .Where(p => !choosers.Contains(p))
+                    .Select(p => p.Name)
+                    .ToArray();
+                
+                switch (targets.Length)
+                {
+                    case 0:
+                        return null;
+                    case 1:
+                        return city.GetPersonByName(targets[0]);
+                }
+
+                var pollMessages = new List<Task<Message>>();
+
+                foreach (var chooser in choosers)
+                {
+                    var userId = personToChat[chooser];
+                    var message = bot.SendPollAsync(userId, "Who will be your target? N", targets);
+                    pollMessages.Add(message);
+                }
+
+                foreach (var task in pollMessages)
+                {
+                    task.Wait();
+                }
+                
+                Thread.Sleep(60 * 1000);
+
+                var votedTargets = new List<IPerson>();
+                foreach (var message in pollMessages.Select(m => m.Result))
+                {
+                    var poll = message.Poll;
+
+                    string result = null;
+                    var maxVotes = -1;
+                    foreach (var pollOption in poll.Options.Where(option => option.VoterCount > maxVotes))
                     {
                         maxVotes = pollOption.VoterCount;
-                        victim = pollOption.Text;
+                        result = pollOption.Text;
                     }
+
+                    votedTargets.Add(city.GetPersonByName(result));
                 }
-                victims.Add(city.GetPersonByName(victim));
+
+                if (votedTargets.Count == 0)
+                {
+                    return null;
+                }
+
+                return votedTargets[Math.Max(0, random.Next(votedTargets.Count) - 1)];
             }
 
-            return victims[new Random().Next(victims.Count - 1)];
+            {
+                isCityAsleep = false;
+                bot.SendTextMessageAsync(chatId, "Город просыпается").Wait();
+                if (choosers.Count < 2)
+                {
+                    return null;
+                }
+                
+                var message = bot.SendPollAsync(chatId, "Who will be your target?", choosers.Select(p => p.Name), isAnonymous:false).Result;
+                Thread.Sleep(60 * 1000); // TODO: 1 minute, change if long
+                var poll = message.Poll;
+                string victim = null;
+                var maxVotes = -1;
+                foreach (var pollOption in poll.Options)
+                {
+                    if (pollOption.VoterCount <= maxVotes) continue;
+                    maxVotes = pollOption.VoterCount;
+                    victim = pollOption.Text;
+                }
+
+                return city.GetPersonByName(victim);
+            }
         }
 
         public async void TellResults(ICity city, DayTime dayTime)
         {
-            if (!CityToChat.ContainsKey(city))
+            if (!cityToChat.ContainsKey(city))
             {
                 return;
             }
-            var chatId = CityToChat[city];
+            var chatId = cityToChat[city];
             foreach (var pair in city.LastChanges)
             {
-                await Bot.SendTextMessageAsync(chatId, $"{pair.Key.Name} {pair.Value}");
+                await bot.SendTextMessageAsync(chatId, $"{pair.Key.Name} {pair.Value}");
             }
         }
         
         public void TellGameResult(WinState state, ICity city)
         {
-            if (!CityToChat.ContainsKey(city))
+            if (!cityToChat.ContainsKey(city))
             {
                 return;
             }
-            var chatId = CityToChat[city];
+            var chatId = cityToChat[city];
             switch (state)
             {
                 case WinState.MafiaWins:
-                    Bot.SendTextMessageAsync(chatId, "Мафия победила");
+                    bot.SendTextMessageAsync(chatId, "Мафия победила");
                     break;
                 case WinState.InProcess:
-                    Bot.SendTextMessageAsync(chatId, "Ничья");
+                    bot.SendTextMessageAsync(chatId, "Ничья");
                     break;
                 case WinState.PeacefulWins:
-                    Bot.SendTextMessageAsync(chatId, "Мирные победили");
+                    bot.SendTextMessageAsync(chatId, "Мирные победили");
                     break;
                 default:
-                    Bot.SendTextMessageAsync(chatId, "Technical problems");
+                    bot.SendTextMessageAsync(chatId, "Technical problems");
                     break;
             }
         }
@@ -118,11 +174,11 @@ namespace Mafia.App
 
             // Console.WriteLine(token);
 
-            Bot = new TelegramBotClient(token);
+            bot = new TelegramBotClient(token);
 
-            Bot.OnMessage += BotOnMessageReceived;
+            bot.OnMessage += BotOnMessageReceived;
             
-            Bot.StartReceiving(Array.Empty<UpdateType>());
+            bot.StartReceiving(Array.Empty<UpdateType>());
         }
 
         private const string StartGameCommand = "/startGame";
@@ -137,6 +193,8 @@ namespace Mafia.App
             var user = message.From;
 
             // await Bot.SendTextMessageAsync(chat.Id, $"Chat.Id: {chat.Id}\nUser: {user.Id}");
+            
+            // TODO: start command
 
             if (message.Text == StartGameCommand)
             {
@@ -152,95 +210,121 @@ namespace Mafia.App
             if (message.Text == EndRecordCommand)
             {
                 var population = new List<IPerson>();
-                if (!PlayersPools.ContainsKey(chat.Id))
+                if (!playersPools.ContainsKey(chat.Id))
                 {
-                    await Bot.SendTextMessageAsync(chat.Id, $"There no opened game record\nType {StartGameCommand} to start one");
+                    await bot.SendTextMessageAsync(chat.Id, $"There no opened game record\nType {StartGameCommand} to start one");
                     return;
                 }
 
-                PlayersPools.TryRemove(chat.Id, out var pool);
+                var pool = playersPools[chat.Id];
                 foreach (var keyValuePair in pool.ExtractPersons())
                 {
-                    population.Add(keyValuePair.Value);
-                    PersonToChat[keyValuePair.Value] = keyValuePair.Key;
+                    var userChatId = keyValuePair.Key;
+                    var person = keyValuePair.Value;
+                    population.Add(person);
+                    personToChat[person] = userChatId;
+                    try
+                    {
+                        if (person.NightRole == null)
+                        {
+                            await bot.SendTextMessageAsync(userChatId, $"Your name is {person.Name} and you are Peaceful");
+                        }
+                        else
+                        {
+                            await bot.SendTextMessageAsync(userChatId, $"Your name is {person.Name} and you are {person.NightRole.Name}");
+                        }
+                    }
+                    catch (Telegram.Bot.Exceptions.ChatNotInitiatedException e)
+                    {
+                        var badUserChat = await bot.GetChatAsync(userChatId);
+                        
+                        await bot.SendTextMessageAsync(chat.Id, $"User @{badUserChat.Username}, please, start me!\n@mafiaprojectbot");
+                        return;
+                    }
                 }
                 
+                playersPools.TryRemove(chat.Id, out pool); // TODO: handle when fails to remove
                 var settings = Settings.Default;
                 var city = new City(population);
-                CityToChat[city] = chat.Id;
+                cityToChat[city] = chat.Id;
                 var game = new Game(settings, city, this);
 
                 RunGame(city, game);
             }
             
-            if (message.Text == "/help")
+            if (message.Text == "/help" || message.Text == "/start")
             {
-               await Bot.SendTextMessageAsync(chat.Id, $"{StartGameCommand} - press to start a game\n{PlayCommand} - add self to game\n{EndRecordCommand} - end recording players and start game already\n/help - this message");
+               await bot.SendTextMessageAsync(chat.Id, $"{StartGameCommand} - press to start a game\n{PlayCommand} - add self to game\n{EndRecordCommand} - end recording players and start game already\n/help - this message");
             }
         }
 
         private async Task StartGameMethod(long chatId)
         {
-            if (PlayersPools.ContainsKey(chatId))
+            if (playersPools.ContainsKey(chatId))
             {
-                await Bot.SendTextMessageAsync(chatId, "Game record already has started!");
+                await bot.SendTextMessageAsync(chatId, "Game record already has started!");
                 return;
             }
                 
             var pool = new PlayersPool();
-            PlayersPools[chatId] = pool;
+            playersPools[chatId] = pool;
                 
-            await Bot.SendTextMessageAsync(chatId, "Record to game started!");
+            await bot.SendTextMessageAsync(chatId, "Record to game started!");
         }
 
         private async Task PlayMethod(long chatId, long userId)
         {
-            if (!PlayersPools.ContainsKey(chatId))
+            if (!playersPools.ContainsKey(chatId))
             {
-                await Bot.SendTextMessageAsync(chatId, $"There no opened game record\nType {StartGameCommand} to start one");
+                await bot.SendTextMessageAsync(chatId, $"There no opened game record\nType {StartGameCommand} to start one");
                 return;
             }
 
-            var pool = PlayersPools[chatId];
+            var pool = playersPools[chatId];
 
             if (!pool.IsOpen)
             {
-                await Bot.SendTextMessageAsync(chatId, "Sorry, record is end up");
+                await bot.SendTextMessageAsync(chatId, "Sorry, record is end up");
                 return;
             }
 
             var added = pool.AddPlayerAsync(userId);
 
-            if (added)
+            try
             {
-                await Bot.SendTextMessageAsync(chatId, "Successfully join game!");
+                // TODO: send user from what chat came message
+                if (added)
+                {
+                    await bot.SendTextMessageAsync(chatId, "Successfully join game!");
+                    await bot.SendTextMessageAsync(userId, "Successfully join game!");
+                }
+                else
+                {
+                    await bot.SendTextMessageAsync(chatId, "Already joined game");
+                    await bot.SendTextMessageAsync(userId, "Already joined game");
+                }
             }
-            else
+            catch (Telegram.Bot.Exceptions.ApiRequestException e)
             {
-                await Bot.SendTextMessageAsync(chatId, "Already joined game");
+                // Console.WriteLine(e);
             }
         }
 
-        private static async Task RunGame(ICity city, Game game)
+        private void RunGame(ICity city, Game game)
         {
             game.StartGame();
-            while (!CityToChat.TryRemove(city, out var chatId))
-            {
-                Console.WriteLine($"Fail to remove city {city}");
-            }
+            cityToChat.TryRemove(city, out var chatId);
+            Console.WriteLine($"Successfully removed city {city} with chat.Id {chatId}");
 
-            
             foreach (var person in city.Population)
             {
-                while (!PersonToChat.TryRemove(person, out var personChat))
-                {
-                    Console.WriteLine($"Fail to remove city {person}");
-                }
+                personToChat.TryRemove(person, out var personChat);
+                Console.WriteLine($"Successfully removed city {person} with chat.Id {personChat}");
             }
         }
     }
 
-    public interface IPlayersPool // TODO: may be disposable
+    public interface IPlayersPool
     {
         bool IsOpen { get; }
         bool AddPlayerAsync(long playerId);
@@ -249,7 +333,7 @@ namespace Mafia.App
 
     public class PlayersPool : IPlayersPool
     {
-        private static readonly string[] Names = {
+        private static readonly List<string> Names = new List<string>{
             "Liam", "Olivia", "Noah", "Emma",
             "Oliver", "Ava", "William", "Sophia",
             "Elijah", "Isabella", "James", "Charlotte",
@@ -285,7 +369,9 @@ namespace Mafia.App
                 _ => null
             };
 
-            var name = Names[random.Next(0, Names.Length)];
+            var name = Names[random.Next(0, Names.Count)];
+            Names.Remove(name);
+            
             return new Person(dayRole, nightRole, name);
         }
 

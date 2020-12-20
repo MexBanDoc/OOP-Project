@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Mafia.Domain
@@ -53,9 +54,14 @@ namespace Mafia.Domain
             foreach (var role in City.Roles.Where(r => r.dayTime == dayTime)) 
             {
                 var target = userInterface.AskForInteractionTarget(
-                    City.Population.Where(p => (dayTime==DayTime.Day?p.DayRole:p.NightRole) == role)
-                        .Where(person => person.IsAlive), 
+                    City.Population
+                        .Where(p => (dayTime == DayTime.Day ? p.DayRole : p.NightRole) == role)
+                        .Where(person => person.IsAlive),
                     role, City);
+                if (target == null)
+                {
+                    continue;
+                }
                 role.Interact(target);
                 City.AddChange(target, role);
             }

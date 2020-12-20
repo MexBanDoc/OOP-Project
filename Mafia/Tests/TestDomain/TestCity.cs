@@ -23,7 +23,7 @@ namespace Tests.TestDomain
                 {
                     new Person(citizen, doctor, "Bob"),
                     new Person(citizen, mafia, "Alice"),
-                    new Person(citizen, null, "Ira"), 
+                    new Person(citizen, null, "Ira"),
                 }));
 
             city.Roles.Count.Should().Be(3);
