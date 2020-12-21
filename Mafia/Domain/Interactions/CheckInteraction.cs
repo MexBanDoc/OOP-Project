@@ -4,9 +4,12 @@
     {
         public void Interact(IPerson person)
         {
-            throw new System.NotImplementedException();
+            if (person.NightRole.Equals(new MafiaRole()))
+            {
+                person.TryKill();
+            }
         }
 
-        public PersonState ResultTargetState { get; }
+        public PersonState ResultTargetState => PersonState.Alive;
     }
 }

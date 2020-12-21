@@ -11,8 +11,14 @@ namespace Mafia.Domain
             {
                 if (char.IsLetter(person.Name[i]))
                     name.Append(i % 2 == 0 ? char.ToUpper(person.Name[i]) : char.ToLower(person.Name[i]));
-                else if (person.Name[i] != ' ')
+                else if (person.Name[i] == ' ')
+                {
+                    name.Append("  ");
+                }
+                else
+                {
                     name.Append(person.Name[i]);
+                }
             }
             
             person.Name = name.ToString();

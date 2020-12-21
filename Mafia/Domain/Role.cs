@@ -30,7 +30,7 @@ namespace Mafia.Domain
 
         private bool Equals(Role other)
         {
-            return Equals(interactions, other.interactions) && Name == other.Name && DayTime == other.DayTime;
+            return Name == other.Name && DayTime == other.DayTime;
         }
 
         public override int GetHashCode()

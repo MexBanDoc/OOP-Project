@@ -5,7 +5,7 @@
         public void Interact(IPerson person)
         {
             var name = person.Name;
-            name = name.Replace(" ", "🎄");
+            name = name.Replace(" ", "🎄 ");
             person.Name = name.Insert(name.Length - 1, "🍾🎁");
         }
 

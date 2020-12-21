@@ -56,10 +56,10 @@ namespace Mafia.App
             var pool = players.ToList();
 
             return ForMethod(new MafiaRole(), 4, pool)
-                .Concat(ForMethod(new HealerRole(), 6, pool))
-                .Concat(ForMethod(new WhoreRole(), 5, pool))
-                .Concat(ForMethod(new SantaClausRole(), 4, pool))
-                //.Concat(ForMethod(new PoliсemanRole(), 3, pool))
+                .Concat(ForMethod(new PoliсemanRole(), 6, pool))
+                .Concat(ForMethod(new HealerRole(), 5, pool))
+                .Concat(ForMethod(new WhoreRole(), 4, pool))
+                .Concat(ForMethod(new SantaClausRole(), 3, pool))
                 .Concat(ForMethod(null, 1, pool));
         }
 
@@ -67,7 +67,7 @@ namespace Mafia.App
         {
             for (var i = 0; i < (players.Count + part - 1) / part; i++)
             {
-                var index = Math.Max(0, random.Next(players.Count) - 1);
+                var index = Math.Max(0, random.Next(pool.Count) - 1);
                 if (index >= pool.Count)
                 {
                     continue;
