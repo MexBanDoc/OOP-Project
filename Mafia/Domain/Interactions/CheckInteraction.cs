@@ -2,14 +2,13 @@
 {
     public class CheckInteraction : IInteraction
     {
+        private PersonState lastState = PersonState.Alive;
+        
         public void Interact(IPerson person)
         {
-            if (person.NightRole.Equals(new MafiaRole()))
-            {
-                person.TryKill();
-            }
+            lastState = person.NightRole.Equals(new MafiaRole()) ? PersonState.Killed : PersonState.Alive;
         }
 
-        public PersonState ResultTargetState => PersonState.Alive;
+        public PersonState ResultTargetState => lastState;
     }
 }
