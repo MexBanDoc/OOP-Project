@@ -207,8 +207,8 @@ namespace Mafia.App
 
             var userName = $"{user.FirstName} {user.LastName} (@{user.Username})";
             var message = pool.AddPlayer(user.Id, userName)
-                ? $"Successfully join game in {chat.Username} chat!"
-                : $"Already joined game in {chat.Username} chat!";
+                ? $"Successfully join game in {chat.Title} chat!"
+                : $"Already joined game in {chat.Title} chat!";
             await bot.SendTextMessageAsync(chat.Id, message);
             await SendUsersSaveMessage(message, user.Id, chat.Id);
         }
@@ -239,11 +239,8 @@ namespace Mafia.App
             var population = new List<IPerson>();
             var pool = playersPools[chatId];
             
-            foreach (var keyValuePair in pool.ExtractPersons())
+            foreach (var (userId, person) in pool.ExtractPersons())
             {
-                var userId = keyValuePair.Key;
-                var person = keyValuePair.Value;
-
                 population.Add(person);
                 personToChat[person] = userId;
                 var message = person.NightRole == null

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using Mafia.Domain;
 
 namespace Mafia.App
@@ -18,7 +19,7 @@ namespace Mafia.App
         public bool IsOpen { get; private set; } = true;
         
         private readonly Random random = new Random();
-        private readonly ConcurrentDictionary<long, IPerson> players = new ConcurrentDictionary<long, IPerson>();
+        private readonly ConcurrentDictionary<long, string> players = new ConcurrentDictionary<long, string>();
 
         public bool AddPlayer(long playerId, string name)
         {
@@ -26,9 +27,8 @@ namespace Mafia.App
             {
                 return false;
             }
-
-            var person = CreatePerson(name);
-            players[playerId] = person;
+            
+            players[playerId] = name;
             return true;
         }
 
@@ -50,11 +50,26 @@ namespace Mafia.App
             return new Person(dayRole, nightRole, name);
         }
 
-        public IEnumerable<KeyValuePair<long, IPerson>> ExtractPersons()
+        public IEnumerable<(long, IPerson)> ExtractPersons()
         {
             IsOpen = false;
-            // TODO: choose roles cool way
-            return players;
+            var pool = players.ToList();
+
+            return ForMethod(new MafiaRole(), 4, pool)
+                .Concat(ForMethod(new HealerRole(), 6, pool))
+                .Concat(ForMethod(null, 1, pool));
+        }
+
+        private IEnumerable<(long, IPerson)> ForMethod(Role role, int part, IList<KeyValuePair<long, string>> pool)
+        {
+            for (var i = 0; i < players.Count / part; i++)
+            {
+                var index = Math.Max(0, random.Next(players.Count) - 1);
+                var id = pool[index].Key;
+                var name = pool[index].Value;
+                pool.RemoveAt(index);
+                yield return (id, new Person(new CitizenRole(), role, name));
+            }
         }
     }
 }
