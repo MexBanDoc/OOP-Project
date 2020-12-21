@@ -57,6 +57,8 @@ namespace Mafia.App
 
             return ForMethod(new MafiaRole(), 4, pool)
                 .Concat(ForMethod(new HealerRole(), 6, pool))
+                .Concat(ForMethod(new WhoreRole(), 5, pool))
+                .Concat(ForMethod(new SantaClausRole(), 4, pool))
                 .Concat(ForMethod(null, 1, pool));
         }
 

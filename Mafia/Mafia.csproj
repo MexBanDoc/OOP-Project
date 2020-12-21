@@ -60,10 +60,12 @@
     <Compile Include="Domain\Enums\PersonState.cs" />
     <Compile Include="Domain\Enums\WinState.cs" />
     <Compile Include="Domain\Game.cs" />
+    <Compile Include="Domain\Interactions\CrazyInteraction.cs" />
     <Compile Include="Domain\Interactions\HealInteraction.cs" />
     <Compile Include="Domain\Interactions\IInteraction.cs" />
     <Compile Include="Domain\Interactions\KillInteraction.cs" />
     <Compile Include="Domain\Interactions\VoteInteraction.cs" />
+    <Compile Include="Domain\Interactions\XmasInteraction.cs" />
     <Compile Include="Domain\Interfaces\ICity.cs" />
     <Compile Include="Domain\Interfaces\IPerson.cs" />
     <Compile Include="Domain\Interfaces\ISettings.cs" />
@@ -73,6 +75,8 @@
     <Compile Include="Domain\Roles\HealerRole.cs" />
     <Compile Include="Domain\Roles\MafiaRole.cs" />
     <Compile Include="Domain\Roles\CitizenRole.cs" />
+    <Compile Include="Domain\Roles\SantaClausRole.cs" />
+    <Compile Include="Domain\Roles\WhoreRole.cs" />
     <Compile Include="Domain\Settings.cs" />
     <Compile Include="Infrastructure\MoreLinq.cs" />
     <Compile Include="Program.cs" />

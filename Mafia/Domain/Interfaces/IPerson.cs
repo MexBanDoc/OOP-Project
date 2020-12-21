@@ -8,6 +8,6 @@
         public bool IsImmortal { get; set; }
         public Role DayRole { get; }
         public Role NightRole { get; }
-        public string Name { get; }
+        public string Name { get; set; }
     }
 }
