@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Mafia.Domain;
 using Telegram.Bot;
@@ -34,14 +33,23 @@ namespace Mafia.App
 
             var choosers = players.ToHashSet();
             if (choosers.Count == 0) return null;
+            
+            TellGreetingsToRole(role, chatId);
 
             return role.DayTime == DayTime.Night
                 ? AskRoleForInteractionTarget(role, city, chatId, choosers)
                 : AskJudgedPerson(city, chatId, choosers);
         }
 
-        private IPerson AskRoleForInteractionTarget(Role role, ICity city, long chatId, HashSet<IPerson> choosers)
+        private void TellGreetingsToRole(Role role, long chatId)
         {
+            if (role.DayTime == DayTime.Day)
+            {
+                isCityAsleep = false;
+                bot.SendTextMessageAsync(chatId, "Город просыпается").Wait();
+                return;
+            }
+            
             if (!isCityAsleep)
             {
                 bot.SendTextMessageAsync(chatId, "Город засыпает").Wait();
@@ -49,18 +57,18 @@ namespace Mafia.App
             }
 
             bot.SendTextMessageAsync(chatId, $"Просыпается {role.Name}");
+        }
 
+        private IPerson AskRoleForInteractionTarget(Role role, ICity city, long chatId, IReadOnlyCollection<IPerson> choosers)
+        {
             var targets = city.Population
                 .Where(p => p.IsAlive && !choosers.Contains(p))
-                .Select(p => p.Name)
-                .ToArray();
+                .Select(p => p.Name).ToArray();
 
-            switch (targets.Length)
+            if (targets.Length == 1)
             {
-                case 0:
-                    return null;
-                case 1:
-                    return city.GetPersonByName(targets[0]);
+                bot.SendTextMessageAsync(chatId, $"{role.Name} automatically chosen {targets[0]}").Wait();
+                return city.GetPersonByName(targets[0]);
             }
 
             var pollMessages = choosers
@@ -68,15 +76,15 @@ namespace Mafia.App
                 .Select(userId => bot.SendPollAsync(userId, "Who will be your target?", targets).Result)
                 .ToList();
 
-            Thread.Sleep(30 * 1000);
+            Task.Delay(TimeSpan.FromSeconds(30)).Wait();
 
             var votedTargets = new List<IPerson>();
             foreach (var poll in pollMessages.Select(message =>
                 bot.StopPollAsync(message.Chat.Id, message.MessageId).Result))
             {
-                foreach (var option in poll.Options)
-                    bot.SendTextMessageAsync(chatId, $"{option.Text} chosen by {option.VoterCount}").Wait();
-                bot.SendTextMessageAsync(chatId, $"Total votes {poll.TotalVoterCount}").Wait();
+                // foreach (var option in poll.Options)
+                //     bot.SendTextMessageAsync(chatId, $"{option.Text} chosen by {option.VoterCount}").Wait();
+                // bot.SendTextMessageAsync(chatId, $"Total votes {poll.TotalVoterCount}").Wait();
 
                 var winner = poll.Options.OrderBy(option => option.VoterCount).Last().Text;
 
@@ -92,24 +100,21 @@ namespace Mafia.App
             return result;
         }
 
-        private IPerson AskJudgedPerson(ICity city, long chatId, HashSet<IPerson> choosers)
+        private IPerson AskJudgedPerson(ICity city, long chatId, IReadOnlyCollection<IPerson> choosers)
         {
-            isCityAsleep = false;
-            bot.SendTextMessageAsync(chatId, "Город просыпается").Wait();
-
             bot.SendTextMessageAsync(chatId, $"Choosers {choosers.Count}").Wait();
 
             if (choosers.Count < 2) return null;
 
             var message = bot.SendPollAsync(chatId, "Who will you judge?", choosers.Select(p => p.Name), isAnonymous: false).Result;
             
-            Thread.Sleep(60 * 1000);
-            
+            Task.Delay(TimeSpan.FromSeconds(60)).Wait();
+
             var poll = bot.StopPollAsync(chatId, message.MessageId).Result;
 
-            foreach (var option in poll.Options)
-                bot.SendTextMessageAsync(chatId, $"{option.Text} chosen by {option.VoterCount}").Wait();
-            bot.SendTextMessageAsync(chatId, $"Total votes {poll.TotalVoterCount}").Wait();
+            // foreach (var option in poll.Options)
+            //     bot.SendTextMessageAsync(chatId, $"{option.Text} chosen by {option.VoterCount}").Wait();
+            // bot.SendTextMessageAsync(chatId, $"Total votes {poll.TotalVoterCount}").Wait();
 
             var winner = poll.Options.OrderBy(option => option.VoterCount).Last().Text;
 
@@ -156,8 +161,7 @@ namespace Mafia.App
             bot.OnMessage += BotOnMessageReceived;
             bot.StartReceiving(Array.Empty<UpdateType>());
         }
-
-        private const string StartGameCommand = "/startGame";
+        
         private const string PlayCommand = "/play";
         private const string EndRecordCommand = "/endRecord";
 
@@ -168,16 +172,10 @@ namespace Mafia.App
             var userId = message.From.Id;
 
             // await Bot.SendTextMessageAsync(chat.Id, $"Chat.Id: {chat.Id}\nUser: {user.Id}");
-            
-            // TODO: join /play and /start game
 
-            switch (message.Text)
+            switch (message.Text.Replace("@mafiaprojectbot", ""))
             {
-                case StartGameCommand:
-                    await StartGameMethod(chatId);
-                    await PlayMethod(chatId, userId);
-                    break;
-                case PlayCommand:
+               case PlayCommand:
                     await PlayMethod(chatId, userId);
                     break;
                 case EndRecordCommand:
@@ -186,31 +184,18 @@ namespace Mafia.App
                 case "/help":
                 case "/start":
                     await bot.SendTextMessageAsync(chatId,
-                        $"{StartGameCommand} - press to start a game\n{PlayCommand} - add self to game\n{EndRecordCommand} - end recording players and start game already\n/help - this message");
+                        $"{PlayCommand} - press to start a game or join to existing game\n{EndRecordCommand} - end recording players and start game already\n/help - this message");
                     break;
             }
-        }
-
-        private async Task StartGameMethod(long chatId)
-        {
-            if (playersPools.ContainsKey(chatId))
-            {
-                await bot.SendTextMessageAsync(chatId, "Game record already has started!");
-                return;
-            }
-                
-            var pool = new PlayersPool();
-            playersPools[chatId] = pool;
-                
-            await bot.SendTextMessageAsync(chatId, "Record to game started!");
         }
 
         private async Task PlayMethod(long chatId, long userId)
         {
             if (!playersPools.ContainsKey(chatId))
             {
-                await bot.SendTextMessageAsync(chatId, $"There no opened game record\nType {StartGameCommand} to start one");
-                return;
+                playersPools[chatId] = new PlayersPool();
+                
+                await bot.SendTextMessageAsync(chatId, "Record to game started!");
             }
 
             var pool = playersPools[chatId];
@@ -245,14 +230,14 @@ namespace Mafia.App
 
         private async Task EndRecordMethod(long chatId)
         {
-            var population = new List<IPerson>();
             if (!playersPools.ContainsKey(chatId))
             {
                 await bot.SendTextMessageAsync(chatId,
-                    $"There no opened game record\nType {StartGameCommand} to start one");
+                    $"There no opened game record\nType {PlayCommand} to start one");
                 return;
             }
 
+            var population = new List<IPerson>();
             var pool = playersPools[chatId];
             foreach (var keyValuePair in pool.ExtractPersons())
             {
@@ -269,7 +254,7 @@ namespace Mafia.App
                         await bot.SendTextMessageAsync(userChatId,
                             $"Your name is {person.Name} and you are {person.NightRole.Name}");
                 }
-                catch (ChatNotInitiatedException e)
+                catch (ChatNotInitiatedException)
                 {
                     var badUserChat = await bot.GetChatAsync(userChatId);
 
@@ -292,12 +277,12 @@ namespace Mafia.App
         {
             game.StartGame();
             cityToChat.TryRemove(city, out var chatId);
-            Console.WriteLine($"Successfully removed city {city} with chat.Id {chatId}");
+            Console.WriteLine($"Successfully removed city with chat.Id {chatId}");
 
             foreach (var person in city.Population)
             {
                 personToChat.TryRemove(person, out var personChat);
-                Console.WriteLine($"Successfully removed city {person} with chat.Id {personChat}");
+                Console.WriteLine($"Successfully removed person with chat.Id {personChat}");
             }
         }
     }

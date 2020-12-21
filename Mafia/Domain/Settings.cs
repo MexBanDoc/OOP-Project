@@ -35,7 +35,7 @@ namespace Mafia.Domain
             var totalCount = city.Population.Count(p => p.IsAlive);
             if (mafiaCount == 0)
                 return WinState.PeacefulWins;
-            if (totalCount > 1 && totalCount - mafiaCount == 1)
+            if (totalCount > 1 && totalCount - mafiaCount <= 1)
                 return WinState.MafiaWins;
             return WinState.InProcess;
         };
