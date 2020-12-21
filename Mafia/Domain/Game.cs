@@ -34,6 +34,10 @@ namespace Mafia.Domain
             {
                 ProcessNight();
                 userInterface.TellResults(city, DayTime.Night);
+                if (GetGameStatus() != WinState.InProcess)
+                {
+                    break;
+                }
                 ProcessDay();
                 userInterface.TellResults(city, DayTime.Day);
             }

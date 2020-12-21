@@ -39,7 +39,7 @@ namespace Mafia.App
             TellGreetingsToRole(role, chatId);
 
             return role.DayTime == DayTime.Night
-                ? AskRoleForInteractionTarget(role, city, chatId, choosers)
+                ? AskRoleForInteractionTarget(city, chatId, choosers)
                 : AskJudgedPerson(city, chatId, choosers);
         }
 
@@ -61,7 +61,7 @@ namespace Mafia.App
             bot.SendTextMessageAsync(chatId, $"Просыпается {role.Name}");
         }
 
-        private IPerson AskRoleForInteractionTarget(Role role, ICity city, long chatId, IReadOnlyCollection<IPerson> choosers)
+        private IPerson AskRoleForInteractionTarget(ICity city, long chatId, IReadOnlyCollection<IPerson> choosers)
         {
             var targets = city.Population
                 .Where(p => p.IsAlive && !choosers.Contains(p))
@@ -69,7 +69,7 @@ namespace Mafia.App
 
             if (targets.Length == 1)
             {
-                bot.SendTextMessageAsync(chatId, $"{role.Name} automatically chosen {targets[0]}").Wait();
+                // bot.SendTextMessageAsync(chatId, $"{role.Name} automatically chosen {targets[0]}").Wait();
                 return city.GetPersonByName(targets[0]);
             }
 
@@ -97,14 +97,14 @@ namespace Mafia.App
 
             var result = votedTargets[Math.Max(0, random.Next(votedTargets.Count) - 1)];
             
-            bot.SendTextMessageAsync(chatId, $"{role.Name} chosen {result.Name}").Wait();
+            // bot.SendTextMessageAsync(chatId, $"{role.Name} chosen {result.Name}").Wait();
 
             return result;
         }
 
         private IPerson AskJudgedPerson(ICity city, long chatId, IReadOnlyCollection<IPerson> choosers)
         {
-            bot.SendTextMessageAsync(chatId, $"Choosers {choosers.Count}").Wait();
+            // bot.SendTextMessageAsync(chatId, $"Choosers {choosers.Count}").Wait();
 
             if (choosers.Count < 2) return null;
 
@@ -154,6 +154,8 @@ namespace Mafia.App
                     bot.SendTextMessageAsync(chatId, "Technical problems");
                     break;
             }
+            
+            bot.SendTextMessageAsync(chatId, "/play if you want restart");
         }
 
         public TgBot()
@@ -172,6 +174,10 @@ namespace Mafia.App
             var message = messageEventArgs.Message;
             var chat = message.Chat;
             var user = message.From;
+            if (message.Text == null)
+            {
+                return;
+            }
 
             switch (message.Text.Replace("@mafiaprojectbot", ""))
             {
