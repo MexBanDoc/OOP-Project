@@ -67,7 +67,8 @@ namespace Mafia.Domain
                 }
             }
 
-            foreach (var cityLastChange in city.LastChanges.Where(cityLastChange => cityLastChange.Value == PersonState.Killed))
+            foreach (var cityLastChange in 
+                city.LastChanges.Where(cityLastChange => cityLastChange.Value == PersonState.Killed))
             {
                 cityLastChange.Key.TryKill();
             }
@@ -81,6 +82,7 @@ namespace Mafia.Domain
             {
                 return;
             }
+            role.Interact(target);
             city.AddChange(target, role);
         }
     }

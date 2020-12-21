@@ -128,10 +128,8 @@ namespace Mafia.App
             if (!cityToChat.ContainsKey(city)) return;
             
             var chatId = cityToChat[city];
-            foreach (var pair in city.LastChanges)
-            {
+            foreach (var pair in city.LastChanges.Where(pair => pair.Value != PersonState.Immortal))
                 await bot.SendTextMessageAsync(chatId, $"{pair.Key.Name} {pair.Value}");
-            }
         }
         
         public void TellGameResult(WinState state, ICity city)

@@ -60,6 +60,7 @@
     <Compile Include="Domain\Enums\PersonState.cs" />
     <Compile Include="Domain\Enums\WinState.cs" />
     <Compile Include="Domain\Game.cs" />
+    <Compile Include="Domain\Interactions\CheckInteraction.cs" />
     <Compile Include="Domain\Interactions\CrazyInteraction.cs" />
     <Compile Include="Domain\Interactions\HealInteraction.cs" />
     <Compile Include="Domain\Interactions\IInteraction.cs" />
@@ -75,6 +76,7 @@
     <Compile Include="Domain\Roles\HealerRole.cs" />
     <Compile Include="Domain\Roles\MafiaRole.cs" />
     <Compile Include="Domain\Roles\CitizenRole.cs" />
+    <Compile Include="Domain\Roles\PolicemanRole.cs" />
     <Compile Include="Domain\Roles\SantaClausRole.cs" />
     <Compile Include="Domain\Roles\WhoreRole.cs" />
     <Compile Include="Domain\Settings.cs" />
