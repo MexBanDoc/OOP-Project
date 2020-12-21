@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Mafia.Infrastructure;
@@ -21,8 +20,8 @@ namespace Mafia.Domain
 
         public IEnumerable<IPerson> GeneratePopulation()
         {
-            var dayDistribution = PlayerDistribution.Where(t => t.Item1.dayTime == DayTime.Day);
-            var nightDistribution = PlayerDistribution.Where(t => t.Item1.dayTime == DayTime.Night);
+            var dayDistribution = PlayerDistribution.Where(t => t.Item1.DayTime == DayTime.Day);
+            var nightDistribution = PlayerDistribution.Where(t => t.Item1.DayTime == DayTime.Night);
             var dayRoles = dayDistribution.Multiply().ToList();
             var nightRoles = nightDistribution.Multiply().ToList();
             for (int i = 0; i < TotalPlayers; i++)
@@ -36,7 +35,7 @@ namespace Mafia.Domain
             var totalCount = city.Population.Count(p => p.IsAlive);
             if (mafiaCount == 0)
                 return WinState.PeacefulWins;
-            if (totalCount > 1 && totalCount - mafiaCount == 1)
+            if (totalCount >= 1 && totalCount - mafiaCount <= 1)
                 return WinState.MafiaWins;
             return WinState.InProcess;
         };

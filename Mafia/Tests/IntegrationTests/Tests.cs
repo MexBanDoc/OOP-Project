@@ -14,7 +14,7 @@ namespace Tests.IntegrationTests
         {
             public IPerson AskForInteractionTarget(IEnumerable<IPerson> players, Role role, ICity city)
             {
-                if (role.dayTime == DayTime.Night)
+                if (role.DayTime == DayTime.Night)
                     Console.WriteLine("Город засыпает");
                 else 
                     Console.WriteLine("Город просыпается");
@@ -31,12 +31,6 @@ namespace Tests.IntegrationTests
                 return victims[new Random().Next(victims.Count - 1)];
             }
 
-            public void StartGame()
-            {
-                Console.WriteLine("U alive now");
-                Console.WriteLine();
-            }
-
             public void TellResults(ICity city, DayTime dayTime)
             {
                 foreach (var pair in city.LastChanges)
@@ -45,7 +39,7 @@ namespace Tests.IntegrationTests
                 Console.WriteLine();
             }
 
-            public void TellGameResult(WinState state)
+            public void TellGameResult(WinState state, ICity city)
             {
                 switch (state)
                 {

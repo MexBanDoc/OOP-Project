@@ -1,18 +1,19 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Mafia.Domain
 {
     public class Game
     {
-        private ISettings Settings;
-        private ICity City;
-        private IUserInterface userInterface;
+        private readonly ISettings settings;
+        private readonly ICity city;
+        private readonly IUserInterface userInterface;
 
         public Game(ISettings settings, ICity city, IUserInterface userInterface)
         {
-            Settings = settings;
-            City = city;
+            this.settings = settings;
+            this.city = city;
             this.userInterface = userInterface;
         }
 
@@ -23,43 +24,64 @@ namespace Mafia.Domain
 
         public void ProcessNight()
         {
-            City.StartNight();
+            city.StartNight();
             DoInteractions(DayTime.Night);
         }
 
         public void StartGame()
         {
-            userInterface.StartGame();
             while (GetGameStatus() == WinState.InProcess)
             {
                 ProcessNight();
-                userInterface.TellResults(City, DayTime.Night);
+                userInterface.TellResults(city, DayTime.Night);
+                if (GetGameStatus() != WinState.InProcess)
+                {
+                    break;
+                }
                 ProcessDay();
-                userInterface.TellResults(City, DayTime.Day);
+                userInterface.TellResults(city, DayTime.Day);
             }
             
-            userInterface.TellGameResult(GetGameStatus());
+            userInterface.TellGameResult(GetGameStatus(), city);
         }
 
-        public WinState GetGameStatus() => Settings.WinCondition(City);
+        public WinState GetGameStatus() => settings.WinCondition(city);
         
         public void ProcessDay()
         {
-            City.StartDay();
+            city.StartDay();
             DoInteractions(DayTime.Day);
         }
 
         private void DoInteractions(DayTime dayTime)
         {
-            foreach (var role in City.Roles.Where(r => r.dayTime == dayTime)) 
+            if (dayTime == DayTime.Day)
             {
-                var target = userInterface.AskForInteractionTarget(
-                    City.Population.Where(p => (dayTime==DayTime.Day?p.DayRole:p.NightRole) == role)
-                        .Where(person => person.IsAlive), 
-                    role, City);
-                role.Interact(target);
-                City.AddChange(target, role);
+                UpdateCityChanges(new CitizenRole(), person => true);
             }
+            else
+            {
+                foreach (var role in city.Roles.Where(r => r.DayTime == dayTime))
+                {
+                    UpdateCityChanges(role, person => role.Equals(person.NightRole));
+                }
+            }
+
+            foreach (var cityLastChange in city.LastChanges.Where(cityLastChange => cityLastChange.Value == PersonState.Killed))
+            {
+                cityLastChange.Key.TryKill();
+            }
+        }
+
+        private void UpdateCityChanges(Role role, Func<IPerson, bool> validate)
+        {
+            var band = city.Population.Where(p => p.IsAlive).Where(validate);
+            var target = userInterface.AskForInteractionTarget(band, role, city);
+            if (target == null)
+            {
+                return;
+            }
+            city.AddChange(target, role);
         }
     }
 }

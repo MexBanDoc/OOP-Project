@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace Mafia.Domain
+﻿namespace Mafia.Domain
 {
     public interface IPerson
     {

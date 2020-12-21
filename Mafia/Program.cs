@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using Mafia.App;
 using Mafia.Domain;
 
@@ -9,7 +10,9 @@ namespace Mafia
         static void Main(string[] args)
         {
             Console.WriteLine("U alive now");
-            var Game = new Game(Settings.Default, new TGBot());
+            var bot = new TgBot();
+            Thread.Sleep(-1);
+            var Game = new Game(Settings.Default, bot);
         }
     }
 }
