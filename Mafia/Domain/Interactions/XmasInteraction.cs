@@ -5,7 +5,8 @@
         public void Interact(IPerson person)
         {
             var name = person.Name;
-            person.Name = name.Replace(" ", "🎄").Insert(name.Length + 2, "🍾🎁");
+            name = name.Replace(" ", "🎄");
+            person.Name = name.Insert(name.Length - 1, "🍾🎁");
         }
 
         public PersonState ResultTargetState { get; } = PersonState.Alive;

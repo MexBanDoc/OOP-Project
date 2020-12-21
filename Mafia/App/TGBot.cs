@@ -140,20 +140,21 @@ namespace Mafia.App
             switch (state)
             {
                 case WinState.MafiaWins:
-                    bot.SendTextMessageAsync(chatId, "Мафия победила");
+                    bot.SendTextMessageAsync(chatId, "Мафия победила").Wait();
                     break;
                 case WinState.InProcess:
-                    bot.SendTextMessageAsync(chatId, "Ничья");
+                    bot.SendTextMessageAsync(chatId, "Ничья").Wait();
                     break;
                 case WinState.PeacefulWins:
-                    bot.SendTextMessageAsync(chatId, "Мирные победили");
+                    bot.SendTextMessageAsync(chatId, "Мирные победили").Wait();
                     break;
                 default:
-                    bot.SendTextMessageAsync(chatId, "Technical problems");
+                    bot.SendTextMessageAsync(chatId, "Technical problems").Wait();
                     break;
             }
             
-            bot.SendTextMessageAsync(chatId, "/play if you want restart");
+            bot.SendTextMessageAsync(chatId, "Type /play if you want restart\nLike this game? Share this bot!").Wait();
+            bot.SendTextMessageAsync(chatId, "🍑").Wait();
         }
 
         public TgBot()

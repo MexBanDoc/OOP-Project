@@ -4,7 +4,7 @@
     {
         public void Interact(IPerson person)
         {
-            person.TryKill();
+            
         }
 
         public PersonState ResultTargetState => PersonState.Killed;

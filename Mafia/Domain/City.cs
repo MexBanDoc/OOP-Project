@@ -50,7 +50,7 @@ namespace Mafia.Domain
                 LastChanges[target] = role.ResultTargetState;
                 return;
             }
-            LastChanges.Add(target, role.ResultTargetState);
+            LastChanges[target] = role.ResultTargetState;
         }
     }
 }
