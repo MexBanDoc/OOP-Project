@@ -7,6 +7,7 @@ using Mafia.Domain;
 using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Exceptions;
+using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Game = Mafia.Domain.Game;
 
@@ -24,6 +25,7 @@ namespace Mafia.App
         private readonly ConcurrentDictionary<ICity, long> cityToChat = new ConcurrentDictionary<ICity, long>();
 
         private bool isCityAsleep;
+        private const int VoteDelay = 30;
         
         public IPerson AskForInteractionTarget(IEnumerable<IPerson> players, Role role, ICity city)
         {
@@ -76,7 +78,7 @@ namespace Mafia.App
                 .Select(userId => bot.SendPollAsync(userId, "Who will be your target?", targets).Result)
                 .ToList();
 
-            Task.Delay(TimeSpan.FromSeconds(30)).Wait();
+            Task.Delay(TimeSpan.FromSeconds(VoteDelay)).Wait();
 
             var votedTargets = new List<IPerson>();
             foreach (var poll in pollMessages.Select(message =>
@@ -108,7 +110,7 @@ namespace Mafia.App
 
             var message = bot.SendPollAsync(chatId, "Who will you judge?", choosers.Select(p => p.Name), isAnonymous: false).Result;
             
-            Task.Delay(TimeSpan.FromSeconds(60)).Wait();
+            Task.Delay(TimeSpan.FromSeconds(2 * VoteDelay)).Wait();
 
             var poll = bot.StopPollAsync(chatId, message.MessageId).Result;
 
@@ -168,63 +170,61 @@ namespace Mafia.App
         private async void BotOnMessageReceived(object sender, MessageEventArgs messageEventArgs)
         {
             var message = messageEventArgs.Message;
-            var chatId = message.Chat.Id;
-            var userId = message.From.Id;
-
-            // await Bot.SendTextMessageAsync(chat.Id, $"Chat.Id: {chat.Id}\nUser: {user.Id}");
+            var chat = message.Chat;
+            var user = message.From;
 
             switch (message.Text.Replace("@mafiaprojectbot", ""))
             {
                case PlayCommand:
-                    await PlayMethod(chatId, userId);
-                    break;
-                case EndRecordCommand:
-                    await EndRecordMethod(chatId);
-                    break;
-                case "/help":
-                case "/start":
-                    await bot.SendTextMessageAsync(chatId,
-                        $"{PlayCommand} - press to start a game or join to existing game\n{EndRecordCommand} - end recording players and start game already\n/help - this message");
-                    break;
+                   await PlayMethod(chat, user);
+                   break;
+               case EndRecordCommand: 
+                   await EndRecordMethod(chat.Id); 
+                   break;
+               case "/help":
+               case "/start": 
+                   await bot.SendTextMessageAsync(chat.Id,
+                    $"{PlayCommand} - press to start a game or join to existing game\n{EndRecordCommand} - end recording players and start game already\n/help - this message"); 
+                   break;
             }
         }
 
-        private async Task PlayMethod(long chatId, long userId)
+        private async Task PlayMethod(Chat chat, User user)
         {
-            if (!playersPools.ContainsKey(chatId))
+            if (!playersPools.ContainsKey(chat.Id))
             {
-                playersPools[chatId] = new PlayersPool();
-                
-                await bot.SendTextMessageAsync(chatId, "Record to game started!");
+                playersPools[chat.Id] = new PlayersPool();
+                await bot.SendTextMessageAsync(chat.Id, "Record to game started!");
             }
 
-            var pool = playersPools[chatId];
+            var pool = playersPools[chat.Id];
 
             if (!pool.IsOpen)
             {
-                await bot.SendTextMessageAsync(chatId, "Sorry, record is end up");
+                await bot.SendTextMessageAsync(chat.Id, "Sorry, record is end up");
                 return;
             }
 
-            var added = pool.AddPlayerAsync(userId);
+            var userName = $"{user.FirstName} {user.LastName} (@{user.Username})";
+            var message = pool.AddPlayer(user.Id, userName)
+                ? $"Successfully join game in {chat.Username} chat!"
+                : $"Already joined game in {chat.Username} chat!";
+            await bot.SendTextMessageAsync(chat.Id, message);
+            await SendUsersSaveMessage(message, user.Id, chat.Id);
+        }
 
+        private async Task SendUsersSaveMessage(string message, long userId, long chatId)
+        {
             try
             {
-                // TODO: send user from what chat came message
-                if (added)
-                {
-                    await bot.SendTextMessageAsync(chatId, "Successfully join game!");
-                    await bot.SendTextMessageAsync(userId, "Successfully join game!");
-                }
-                else
-                {
-                    await bot.SendTextMessageAsync(chatId, "Already joined game");
-                    await bot.SendTextMessageAsync(userId, "Already joined game");
-                }
+                await bot.SendTextMessageAsync(userId, message);
             }
-            catch (ApiRequestException)
+            catch (ChatNotInitiatedException)
             {
-                // Console.WriteLine(e);
+                var badUserChat = await bot.GetChatAsync(userId);
+
+                await bot.SendTextMessageAsync(chatId,
+                    $"User @{badUserChat.Username}, please, start me!\n@mafiaprojectbot");
             }
         }
 
@@ -232,43 +232,30 @@ namespace Mafia.App
         {
             if (!playersPools.ContainsKey(chatId))
             {
-                await bot.SendTextMessageAsync(chatId,
-                    $"There no opened game record\nType {PlayCommand} to start one");
+                await bot.SendTextMessageAsync(chatId, $"There no opened game record\nType {PlayCommand} to start one");
                 return;
             }
 
             var population = new List<IPerson>();
             var pool = playersPools[chatId];
+            
             foreach (var keyValuePair in pool.ExtractPersons())
             {
-                var userChatId = keyValuePair.Key;
+                var userId = keyValuePair.Key;
                 var person = keyValuePair.Value;
-                population.Add(person);
-                personToChat[person] = userChatId;
-                try
-                {
-                    if (person.NightRole == null)
-                        await bot.SendTextMessageAsync(userChatId,
-                            $"Your name is {person.Name} and you are Peaceful");
-                    else
-                        await bot.SendTextMessageAsync(userChatId,
-                            $"Your name is {person.Name} and you are {person.NightRole.Name}");
-                }
-                catch (ChatNotInitiatedException)
-                {
-                    var badUserChat = await bot.GetChatAsync(userChatId);
 
-                    await bot.SendTextMessageAsync(chatId,
-                        $"User @{badUserChat.Username}, please, start me!\n@mafiaprojectbot");
-                    return;
-                }
+                population.Add(person);
+                personToChat[person] = userId;
+                var message = person.NightRole == null
+                    ? $"Your name is {person.Name} and you are Peaceful"
+                    : $"Your name is {person.Name} and you are {person.NightRole.Name}";
+                await SendUsersSaveMessage(message, userId, chatId);
             }
 
             playersPools.TryRemove(chatId, out pool); // TODO: handle when fails to remove
-            var settings = Settings.Default;
             var city = new City(population);
             cityToChat[city] = chatId;
-            var game = new Game(settings, city, this);
+            var game = new Game(Settings.Default, city, this);
 
             RunGame(city, game);
         }
