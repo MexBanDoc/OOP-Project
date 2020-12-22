@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Mafia.Domain;
 using Telegram.Bot;
@@ -153,7 +154,16 @@ namespace Mafia.App
                     break;
             }
             
-            bot.SendTextMessageAsync(chatId, "Type /play if you want restart\nLike this game? Share this bot!").Wait();
+            var mapMessage = new StringBuilder();
+            foreach (var person in city.Population)
+            {
+                mapMessage.Append($"{person.Name} was {(person.NightRole == null ? "Peaceful" : person.NightRole.Name)}\n");
+            }
+
+            mapMessage.Append("\nType /play if you want restart\nLike this game? Share this bot!");
+            
+            bot.SendTextMessageAsync(chatId,mapMessage.ToString()).Wait();
+            
             bot.SendTextMessageAsync(chatId, "🍑").Wait();
         }
 
@@ -167,6 +177,35 @@ namespace Mafia.App
         
         private const string PlayCommand = "/play";
         private const string EndRecordCommand = "/endRecord";
+
+        private const string HelpMessage = @"/play - press to start a game or join to existing game
+/endRecord - end recording players and start game already
+/guide - описание игровых ролей
+/help - this message";
+        
+        private const string GuideMessage = @"Peaceful - обычный гражданин. Днем ходит на работу, ночью спит.
+Цель: уничтожить мафию.
+Возможные действия: дневное голосование.
+
+Policeman - угрюмый жёсткий коп. Днем сидит в участке, а ночью выходит на тропу войны с мафией.
+Цель: уничтожить мафию.
+Возможные действия: дневное голосование, ночная проверка игрока (в случае проверки мафии-убийство игрока).
+
+D♀ct♂r - добрый врач, спасающий жизни. К сожалению, операции на себе делать проблематично, поэтому сам себя спасти он не может.
+Цель: уничтожить мафию.
+Возможные действия: дневное голосование, ночное лечение (игрок становится невосприимчив к убийствам до конца ночи).
+
+НоЧнАя БаБоЧкА - жрица любви. Неизвестно, чем она занимается днём, но ночью развлекается с другими игроками. Правда, после таких развлечений, люди уже не бывают прежними...
+Цель: уничтожить мафию.
+Возможные действия: дневное голосование, ночное посещение (те, к кому пришла бабочка бессмертны на ночь, а ещё у них сильно меняется ник до конца игры).
+
+Ded Moroz - дедушка спешит поздравить вас с Новым Годом! Играет за мирных.
+Цель: уничтожить мафию.
+Возможные действия: дневное голосование, ночное посещение (меняет ник, добавляя в него подарки и ель).
+
+Русская мафия - опасная и смертоносная группировка. Желает подчинить город себе.
+Цель: сравнять число мирных и мафии.
+Возможные действия: дневное голосование, ночное убийство (каждый член группировки выбирает цель, выбирается цель с наибольшим числом голосов, если таких несколько, то случайная цель).";
 
         private async void BotOnMessageReceived(object sender, MessageEventArgs messageEventArgs)
         {
@@ -188,8 +227,10 @@ namespace Mafia.App
                    break;
                case "/help":
                case "/start": 
-                   await bot.SendTextMessageAsync(chat.Id,
-                    $"{PlayCommand} - press to start a game or join to existing game\n{EndRecordCommand} - end recording players and start game already\n/help - this message"); 
+                   await bot.SendTextMessageAsync(chat.Id, HelpMessage); 
+                   break;
+               case "/guide":
+                   await bot.SendTextMessageAsync(chat.Id, GuideMessage); 
                    break;
             }
         }
