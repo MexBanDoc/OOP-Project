@@ -2,7 +2,6 @@
 {
     public interface IInteraction
     {
-        void Interact(IPerson person);
-        PersonState ResultTargetState { get; }
+        PersonState Interact(IPerson person);
     }
 }

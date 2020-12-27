@@ -2,11 +2,12 @@
 {
     public class XmasInteraction : IInteraction
     {
-        public void Interact(IPerson person)
+        public PersonState Interact(IPerson person)
         {
             var name = person.Name;
-            name = name.Replace(" ", "🎄 ");
-            person.Name = name.Insert(name.Length - 1, "🍾🎁");
+            name = name.Replace(" ", " 🎄 ");
+            person.Name = name.Insert(name.Length, "🍾🎁");
+            return PersonState.Alive;
         }
 
         public PersonState ResultTargetState { get; } = PersonState.Alive;

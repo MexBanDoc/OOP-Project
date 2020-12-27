@@ -2,11 +2,9 @@
 {
     public class VoteInteraction : IInteraction
     {
-        public void Interact(IPerson person)
+        public PersonState Interact(IPerson person)
         {
-            person.TryKill();
+            return PersonState.Killed;
         }
-
-        public PersonState ResultTargetState => PersonState.Killed;
     }
 }

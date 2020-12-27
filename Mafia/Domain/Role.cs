@@ -7,18 +7,14 @@ namespace Mafia.Domain
     {
         private readonly List<IInteraction> interactions;
 
-        public PersonState ResultTargetState => interactions.Select(inter => inter.ResultTargetState).Max();
         public Role(List<IInteraction> interactions)
         {
             this.interactions = interactions;
         }
 
-        public void Interact(IPerson person)
+        public PersonState Interact(IPerson person)
         {
-            foreach (var interaction in interactions)
-            {
-                interaction.Interact(person);
-            }
+            return interactions.Select(inter => inter.Interact(person)).Max();
         }
 
         public override bool Equals(object obj)

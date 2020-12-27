@@ -14,6 +14,6 @@ namespace Mafia.Domain
         public void StartNight();
         public void StartDay();
 
-        public void AddChange(IPerson target, Role role);
+        public void AddChange(IPerson target, PersonState state);
     }
 }

@@ -2,11 +2,10 @@
 {
     public class HealInteraction : IInteraction
     {
-        public void Interact(IPerson person)
+        public PersonState Interact(IPerson person)
         {
             person.Heal();
+            return PersonState.Immortal;
         }
-
-        public PersonState ResultTargetState => PersonState.Immortal;
     }
 }

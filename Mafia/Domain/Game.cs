@@ -82,8 +82,7 @@ namespace Mafia.Domain
             {
                 return;
             }
-            role.Interact(target);
-            city.AddChange(target, role);
+            city.AddChange(target, role.Interact(target));
         }
     }
 }

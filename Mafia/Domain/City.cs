@@ -43,14 +43,14 @@ namespace Mafia.Domain
             DayTime = DayTime.Day;
         }
 
-        public void AddChange(IPerson target, Role role)
+        public void AddChange(IPerson target, PersonState state)
         {
             if (LastChanges.ContainsKey(target) && LastChanges[target] != PersonState.Immortal)
             {
-                LastChanges[target] = role.ResultTargetState;
+                LastChanges[target] = state;
                 return;
             }
-            LastChanges[target] = role.ResultTargetState;
+            LastChanges[target] = state;
         }
     }
 }

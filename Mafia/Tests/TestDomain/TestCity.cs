@@ -85,7 +85,7 @@ namespace Tests.TestDomain
         {
             var person = new Person(new CitizenRole(), new HealerRole(), "Bob");
             city.LastChanges.ContainsKey(person).Should().BeFalse();
-            city.AddChange(person, new MafiaRole());
+            city.AddChange(person, new MafiaRole().Interact(person));
             city.LastChanges.Count.Should().Be(1);
             city.LastChanges.Should().Contain(person, PersonState.Killed);
         }

@@ -2,11 +2,9 @@
 {
     public class KillInteraction : IInteraction
     {
-        public void Interact(IPerson person)
+        public PersonState Interact(IPerson person)
         {
-            
+            return PersonState.Killed;
         }
-
-        public PersonState ResultTargetState => PersonState.Killed;
     }
 }
