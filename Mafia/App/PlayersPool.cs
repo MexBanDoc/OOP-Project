@@ -21,13 +21,13 @@ namespace Mafia.App
         private readonly Random random = new Random();
         private readonly ConcurrentDictionary<long, string> players = new ConcurrentDictionary<long, string>
         {
-            [540232512] = "/MexBanDoc",
+            [540232512] = "Timofey Belov (@MexBanDoc)",
             [626404561] = "Danya Krutovsky (@krutovsky)",
-            [376240791] = "/mefoolyhi",
-            [756835435] = "prefie",
-            [527302283] = "bro_en",
-            [749270491] = "skachusov",
-            [930202628] = "Andrey135296"
+            [376240791] = "ЛЕНА (@mefoolyhi)",
+            [756835435] = "Коля @prefie",
+            [527302283] = "Дима @bro_en",
+            [749270491] = "СТЕПА @skachusov",
+            [930202628] = "Android @Andrey135296"
         };
 
         public bool AddPlayer(long playerId, string name)
@@ -41,10 +41,12 @@ namespace Mafia.App
             return true;
         }
 
-        public IEnumerable<(long, IPerson)> ExtractPersons()
+        public IEnumerable<(long, IPerson)> ExtractPersons(ISettings settings)
         {
             IsOpen = false;
             var pool = players.ToList();
+            
+            // TODO: Change all (delegate to settings)
 
             return ForMethod(new MafiaRole(), 4, pool)
                 .Concat(ForMethod(new PoliсemanRole(), 6, pool))

@@ -7,6 +7,6 @@ namespace Mafia.App
     {
         bool IsOpen { get; }
         bool AddPlayer(long playerId, string name);
-        IEnumerable<(long, IPerson)> ExtractPersons();
+        IEnumerable<(long, IPerson)> ExtractPersons(ISettings settings);
     }
 }

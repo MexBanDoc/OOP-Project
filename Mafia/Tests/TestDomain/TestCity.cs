@@ -10,7 +10,7 @@ namespace Tests.TestDomain
     public class TestCity
     {
         private static City city =
-            new City(new List<IPerson>(Settings.Default.GeneratePopulation()));
+            new City(new List<IPerson>(Settings.Default.GeneratePopulation()), Settings.Default.CityName);
 
         [Test]
         public void TestConstructor()
@@ -24,7 +24,7 @@ namespace Tests.TestDomain
                     new Person(citizen, doctor, "Bob"),
                     new Person(citizen, mafia, "Alice"),
                     new Person(citizen, null, "Ira"),
-                }));
+                }), Settings.Default.CityName);
 
             city.Roles.Count.Should().Be(3);
             city.Roles.Should().BeEquivalentTo(citizen, mafia, doctor);

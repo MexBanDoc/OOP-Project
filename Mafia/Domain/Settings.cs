@@ -8,6 +8,7 @@ namespace Mafia.Domain
     public class Settings : ISettings
     {
         public Func<ICity, WinState> WinCondition { get; }
+        public string CityName { get; } = "CumCockCity";
         public List<Tuple<Role, int>> PlayerDistribution { get; }
         public int TotalPlayers { get; }
 

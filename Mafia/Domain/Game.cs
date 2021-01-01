@@ -19,7 +19,8 @@ namespace Mafia.Domain
         }
 
         public Game(ISettings settings, IUserInterface userInterface)
-            : this(settings, new City(new List<IPerson>(settings.GeneratePopulation())), userInterface)
+            : this(settings, new City(new List<IPerson>(settings.GeneratePopulation()), settings.CityName),
+                userInterface)
         {
         }
 

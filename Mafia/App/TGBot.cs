@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Mafia.Domain;
 using Mafia.Infrastructure;
@@ -15,56 +16,76 @@ using Game = Mafia.Domain.Game;
 
 namespace Mafia.App
 {
+    // TODO: polls -> /name@city
+    
+    // TODO: separate how to talk and what to talk
+    
     public class TgBot : IUserInterface
     {
         private readonly TelegramBotClient bot;
+        private readonly User me;
         
         private readonly Random random = new Random();
-        private readonly object lockObject = new object();
+        private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
 
         private readonly ConcurrentDictionary<long, IPlayersPool> playersPools =
             new ConcurrentDictionary<long, IPlayersPool>();
         private readonly ConcurrentDictionary<IPerson, long> personToChat = new ConcurrentDictionary<IPerson, long>();
         private readonly ConcurrentDictionary<ICity, long> cityToChat = new ConcurrentDictionary<ICity, long>();
-
-        private bool isCityAsleep;
+        private readonly ConcurrentDictionary<ICity, bool> citiToAwake = new ConcurrentDictionary<ICity, bool>();
+        
         private const int VoteDelay = 30;
         
         public async Task<IPerson> AskForInteractionTarget(IEnumerable<IPerson> players, Role role, ICity city)
         {
             if (!cityToChat.ContainsKey(city)) return null;
 
-            var chatId = cityToChat[city];
-
             var choosers = players.ToHashSet();
             if (choosers.Count == 0) return null;
             
-            await TellGreetingsToRole(role, chatId);
+            await TellGreetingsToRole(role, city);
 
             return role.DayTime == DayTime.Night
-                ? await AskRoleForInteractionTarget(city, chatId, choosers)
-                : await AskJudgedPerson(city, chatId, choosers);
+                ? await AskRoleForInteractionTarget(city, choosers)
+                : await AskJudgedPerson(city, choosers);
         }
 
-        private async Task TellGreetingsToRole(Role role, long chatId)
+        private async Task TellGreetingsToRole(Role role, ICity city)
         {
-            if (role.DayTime == DayTime.Day)
-            {
-                isCityAsleep = false;
-                await bot.SendTextMessageAsync(chatId, "Город просыпается");
-                return;
-            }
+            var chatId = cityToChat[city];
+            var lockTaken = false;
             
-            if (!isCityAsleep)
+            try
             {
-                await bot.SendTextMessageAsync(chatId, "Город засыпает");
-                isCityAsleep = true;
+                await semaphore.WaitAsync();
+                lockTaken = true;
+                
+                if (role.DayTime == DayTime.Day)
+                {
+                    citiToAwake[city] = true;
+                    await bot.SendTextMessageAsync(chatId, "Город просыпается");
+                }
+                else
+                {
+                    if (citiToAwake[city])
+                    {
+                        await bot.SendTextMessageAsync(chatId, "Город засыпает");
+                        citiToAwake[city] = false;
+                    }
+                
+                    await bot.SendTextMessageAsync(chatId, $"Просыпается {role.Name}");
+                }
             }
-
-            await bot.SendTextMessageAsync(chatId, $"Просыпается {role.Name}");
+            finally
+            {
+                if (lockTaken)
+                {
+                    semaphore.Release();
+                }
+            }
         }
 
-        private async Task<IPerson> AskRoleForInteractionTarget(ICity city, long chatId, IReadOnlyCollection<IPerson> choosers)
+        private async Task<IPerson> AskRoleForInteractionTarget(ICity city, IReadOnlyCollection<IPerson> choosers)
         {
             var targets = city.Population
                 .Where(p => p.IsAlive && !choosers.Contains(p))
@@ -105,8 +126,9 @@ namespace Mafia.App
             return result;
         }
 
-        private async Task<IPerson> AskJudgedPerson(ICity city, long chatId, IReadOnlyCollection<IPerson> choosers)
+        private async Task<IPerson> AskJudgedPerson(ICity city, IReadOnlyCollection<IPerson> choosers)
         {
+            var chatId = cityToChat[city];
             // bot.SendTextMessageAsync(chatId, $"Choosers {choosers.Count}").Wait();
 
             if (choosers.Count < 2) return null;
@@ -177,6 +199,7 @@ namespace Mafia.App
             bot = new TelegramBotClient(token);
             bot.OnMessage += BotOnMessageReceived;
             bot.StartReceiving(Array.Empty<UpdateType>());
+            me = bot.GetMeAsync().Result;
         }
         
         private const string PlayCommand = "/play";
@@ -194,7 +217,7 @@ namespace Mafia.App
                 return;
             }
 
-            switch (message.Text.Replace("@mafiaprojectbot", ""))
+            switch (message.Text.Replace($"@{me.Username}", ""))
             {
                case PlayCommand:
                    await PlayMethod(chat, user);
@@ -258,11 +281,15 @@ namespace Mafia.App
                 await bot.SendTextMessageAsync(chatId, $"There no opened game record\nType {PlayCommand} to start one");
                 return;
             }
+            
+            // TODO: while everyone types /play someone creates settings
+            // TODO: save chatId -> settings
+            // TODO: from settings extract winCondition and Population
 
             var population = new List<IPerson>();
             var pool = playersPools[chatId];
             
-            foreach (var (userId, person) in pool.ExtractPersons())
+            foreach (var (userId, person) in pool.ExtractPersons(null))
             {
                 population.Add(person);
                 personToChat[person] = userId;
@@ -273,8 +300,11 @@ namespace Mafia.App
             }
 
             playersPools.TryRemove(chatId, out pool); // TODO: handle when fails to remove
-            var city = new City(population);
+            
+            // TODO: extract name from setting
+            var city = new City(population, Settings.Default.CityName);
             cityToChat[city] = chatId;
+            citiToAwake[city] = true;
             var game = new Game(Settings.Default, city, this);
 
             await RunGame(city, game);
