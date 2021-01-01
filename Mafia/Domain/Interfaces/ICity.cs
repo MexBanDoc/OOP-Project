@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace Mafia.Domain
 {
@@ -7,7 +8,7 @@ namespace Mafia.Domain
         public ICollection<IPerson> Population { get; }
         public ICollection<Role> Roles { get; }
         public DayTime DayTime { get; }
-        public Dictionary<IPerson, PersonState> LastChanges { get; }
+        public ConcurrentDictionary<IPerson, PersonState> LastChanges { get; }
 
         public IPerson GetPersonByName(string name);
 

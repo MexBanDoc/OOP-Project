@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using FluentAssertions;
 using Mafia.Domain;
 using NUnit.Framework;
@@ -12,7 +13,7 @@ namespace Tests.IntegrationTests
     {
         private class ConsoleInterface : IUserInterface
         {
-            public IPerson AskForInteractionTarget(IEnumerable<IPerson> players, Role role, ICity city)
+            public async Task<IPerson> AskForInteractionTarget(IEnumerable<IPerson> players, Role role, ICity city)
             {
                 if (role.DayTime == DayTime.Night)
                     Console.WriteLine("Город засыпает");
@@ -31,7 +32,7 @@ namespace Tests.IntegrationTests
                 return victims[new Random().Next(victims.Count - 1)];
             }
 
-            public void TellResults(ICity city, DayTime dayTime)
+            public async Task TellResults(ICity city, DayTime dayTime)
             {
                 foreach (var pair in city.LastChanges)
                     Console.Write($"{pair.Key.Name} {pair.Value}");
@@ -39,7 +40,7 @@ namespace Tests.IntegrationTests
                 Console.WriteLine();
             }
 
-            public void TellGameResult(WinState state, ICity city)
+            public async Task TellGameResult(WinState state, ICity city)
             {
                 switch (state)
                 {

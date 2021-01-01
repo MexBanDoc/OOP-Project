@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Mafia.Domain
@@ -8,12 +9,12 @@ namespace Mafia.Domain
         public ICollection<IPerson> Population { get; }
         public ICollection<Role> Roles { get; } = new HashSet<Role>();
         public DayTime DayTime { get; private set; }
-        public Dictionary<IPerson, PersonState> LastChanges { get; private set; }
+        public ConcurrentDictionary<IPerson, PersonState> LastChanges { get; private set; }
         
         public City(ICollection<IPerson> population)
         {
             Population = population;
-            LastChanges = new Dictionary<IPerson, PersonState>();
+            LastChanges = new ConcurrentDictionary<IPerson, PersonState>();
             foreach (var person in population)
             {
                 if (!(person.NightRole is null))
@@ -29,13 +30,13 @@ namespace Mafia.Domain
 
         public void StartNight()
         {
-            LastChanges = new Dictionary<IPerson, PersonState>();
+            LastChanges = new ConcurrentDictionary<IPerson, PersonState>();
             DayTime = DayTime.Night;
         }
 
         public void StartDay()
         {
-            LastChanges = new Dictionary<IPerson, PersonState>();
+            LastChanges = new ConcurrentDictionary<IPerson, PersonState>();
             foreach (var person in Population)
             {
                 person.IsImmortal = false;

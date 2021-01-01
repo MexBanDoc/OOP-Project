@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Mafia.Domain;
+using Mafia.Infrastructure;
 using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Exceptions;
@@ -19,6 +20,7 @@ namespace Mafia.App
         private readonly TelegramBotClient bot;
         
         private readonly Random random = new Random();
+        private readonly object lockObject = new object();
 
         private readonly ConcurrentDictionary<long, IPlayersPool> playersPools =
             new ConcurrentDictionary<long, IPlayersPool>();
@@ -28,7 +30,7 @@ namespace Mafia.App
         private bool isCityAsleep;
         private const int VoteDelay = 30;
         
-        public IPerson AskForInteractionTarget(IEnumerable<IPerson> players, Role role, ICity city)
+        public async Task<IPerson> AskForInteractionTarget(IEnumerable<IPerson> players, Role role, ICity city)
         {
             if (!cityToChat.ContainsKey(city)) return null;
 
@@ -37,32 +39,32 @@ namespace Mafia.App
             var choosers = players.ToHashSet();
             if (choosers.Count == 0) return null;
             
-            TellGreetingsToRole(role, chatId);
+            await TellGreetingsToRole(role, chatId);
 
             return role.DayTime == DayTime.Night
-                ? AskRoleForInteractionTarget(city, chatId, choosers)
-                : AskJudgedPerson(city, chatId, choosers);
+                ? await AskRoleForInteractionTarget(city, chatId, choosers)
+                : await AskJudgedPerson(city, chatId, choosers);
         }
 
-        private void TellGreetingsToRole(Role role, long chatId)
+        private async Task TellGreetingsToRole(Role role, long chatId)
         {
             if (role.DayTime == DayTime.Day)
             {
                 isCityAsleep = false;
-                bot.SendTextMessageAsync(chatId, "Город просыпается").Wait();
+                await bot.SendTextMessageAsync(chatId, "Город просыпается");
                 return;
             }
             
             if (!isCityAsleep)
             {
-                bot.SendTextMessageAsync(chatId, "Город засыпает").Wait();
+                await bot.SendTextMessageAsync(chatId, "Город засыпает");
                 isCityAsleep = true;
             }
 
-            bot.SendTextMessageAsync(chatId, $"Просыпается {role.Name}");
+            await bot.SendTextMessageAsync(chatId, $"Просыпается {role.Name}");
         }
 
-        private IPerson AskRoleForInteractionTarget(ICity city, long chatId, IReadOnlyCollection<IPerson> choosers)
+        private async Task<IPerson> AskRoleForInteractionTarget(ICity city, long chatId, IReadOnlyCollection<IPerson> choosers)
         {
             var targets = city.Population
                 .Where(p => p.IsAlive && !choosers.Contains(p))
@@ -79,7 +81,7 @@ namespace Mafia.App
                 .Select(userId => bot.SendPollAsync(userId, "Who will be your target?", targets).Result)
                 .ToList();
 
-            Task.Delay(TimeSpan.FromSeconds(VoteDelay)).Wait();
+            await Task.Delay(TimeSpan.FromSeconds(VoteDelay));
 
             var votedTargets = new List<IPerson>();
             foreach (var poll in pollMessages.Select(message =>
@@ -103,17 +105,17 @@ namespace Mafia.App
             return result;
         }
 
-        private IPerson AskJudgedPerson(ICity city, long chatId, IReadOnlyCollection<IPerson> choosers)
+        private async Task<IPerson> AskJudgedPerson(ICity city, long chatId, IReadOnlyCollection<IPerson> choosers)
         {
             // bot.SendTextMessageAsync(chatId, $"Choosers {choosers.Count}").Wait();
 
             if (choosers.Count < 2) return null;
 
-            var message = bot.SendPollAsync(chatId, "Who will you judge?", choosers.Select(p => p.Name), isAnonymous: false).Result;
+            var message = await bot.SendPollAsync(chatId, "Who will you judge?", choosers.Select(p => p.Name), isAnonymous: false);
             
-            Task.Delay(TimeSpan.FromSeconds(2 * VoteDelay)).Wait();
+            await Task.Delay(TimeSpan.FromSeconds(2 * VoteDelay));
 
-            var poll = bot.StopPollAsync(chatId, message.MessageId).Result;
+            var poll = await bot.StopPollAsync(chatId, message.MessageId);
 
             // foreach (var option in poll.Options)
             //     bot.SendTextMessageAsync(chatId, $"{option.Text} chosen by {option.VoterCount}").Wait();
@@ -124,16 +126,18 @@ namespace Mafia.App
             return city.GetPersonByName(winner);
         }
 
-        public async void TellResults(ICity city, DayTime dayTime)
+        public async Task TellResults(ICity city, DayTime dayTime)
         {
             if (!cityToChat.ContainsKey(city)) return;
             
             var chatId = cityToChat[city];
             foreach (var pair in city.LastChanges.Where(pair => pair.Value != PersonState.Immortal))
+            {
                 await bot.SendTextMessageAsync(chatId, $"{pair.Key.Name} {pair.Value}");
+            }
         }
         
-        public void TellGameResult(WinState state, ICity city)
+        public async Task TellGameResult(WinState state, ICity city)
         {
             if (!cityToChat.ContainsKey(city)) return;
             
@@ -141,16 +145,16 @@ namespace Mafia.App
             switch (state)
             {
                 case WinState.MafiaWins:
-                    bot.SendTextMessageAsync(chatId, "Мафия победила").Wait();
+                    await bot.SendTextMessageAsync(chatId, "Мафия победила");
                     break;
                 case WinState.InProcess:
-                    bot.SendTextMessageAsync(chatId, "Ничья").Wait();
+                    await bot.SendTextMessageAsync(chatId, "Ничья");
                     break;
                 case WinState.PeacefulWins:
-                    bot.SendTextMessageAsync(chatId, "Мирные победили").Wait();
+                    await bot.SendTextMessageAsync(chatId, "Мирные победили");
                     break;
                 default:
-                    bot.SendTextMessageAsync(chatId, "Technical problems").Wait();
+                    await bot.SendTextMessageAsync(chatId, "Technical problems");
                     break;
             }
             
@@ -177,41 +181,14 @@ namespace Mafia.App
         
         private const string PlayCommand = "/play";
         private const string EndRecordCommand = "/endRecord";
-
-        private const string HelpMessage = @"/play - press to start a game or join to existing game
-/endRecord - end recording players and start game already
-/guide - описание игровых ролей
-/help - this message";
         
-        private const string GuideMessage = @"Peaceful - обычный гражданин. Днем ходит на работу, ночью спит.
-Цель: уничтожить мафию.
-Возможные действия: дневное голосование.
-
-Policeman - угрюмый жёсткий коп. Днем сидит в участке, а ночью выходит на тропу войны с мафией.
-Цель: уничтожить мафию.
-Возможные действия: дневное голосование, ночная проверка игрока (в случае проверки мафии-убийство игрока).
-
-D♀ct♂r - добрый врач, спасающий жизни. К сожалению, операции на себе делать проблематично, поэтому сам себя спасти он не может.
-Цель: уничтожить мафию.
-Возможные действия: дневное голосование, ночное лечение (игрок становится невосприимчив к убийствам до конца ночи).
-
-НоЧнАя БаБоЧкА - жрица любви. Неизвестно, чем она занимается днём, но ночью развлекается с другими игроками. Правда, после таких развлечений, люди уже не бывают прежними...
-Цель: уничтожить мафию.
-Возможные действия: дневное голосование, ночное посещение (те, к кому пришла бабочка бессмертны на ночь, а ещё у них сильно меняется ник до конца игры).
-
-Ded Moroz - дедушка спешит поздравить вас с Новым Годом! Играет за мирных.
-Цель: уничтожить мафию.
-Возможные действия: дневное голосование, ночное посещение (меняет ник, добавляя в него подарки и ель).
-
-Русская мафия - опасная и смертоносная группировка. Желает подчинить город себе.
-Цель: сравнять число мирных и мафии.
-Возможные действия: дневное голосование, ночное убийство (каждый член группировки выбирает цель, выбирается цель с наибольшим числом голосов, если таких несколько, то случайная цель).";
-
         private async void BotOnMessageReceived(object sender, MessageEventArgs messageEventArgs)
         {
             var message = messageEventArgs.Message;
             var chat = message.Chat;
             var user = message.From;
+            
+            Console.WriteLine($"{user.Username}: {user.Id}");
             if (message.Text == null)
             {
                 return;
@@ -227,10 +204,10 @@ Ded Moroz - дедушка спешит поздравить вас с Новы�
                    break;
                case "/help":
                case "/start": 
-                   await bot.SendTextMessageAsync(chat.Id, HelpMessage); 
+                   await bot.SendTextMessageAsync(chat.Id, Resources.HelpMessage); 
                    break;
                case "/guide":
-                   await bot.SendTextMessageAsync(chat.Id, GuideMessage); 
+                   await bot.SendTextMessageAsync(chat.Id, Resources.GuideMessage); 
                    break;
             }
         }
@@ -300,12 +277,12 @@ Ded Moroz - дедушка спешит поздравить вас с Новы�
             cityToChat[city] = chatId;
             var game = new Game(Settings.Default, city, this);
 
-            RunGame(city, game);
+            await RunGame(city, game);
         }
 
-        private void RunGame(ICity city, Game game)
+        private async Task RunGame(ICity city, Game game)
         {
-            game.StartGame();
+            await game.StartGame();
             cityToChat.TryRemove(city, out var chatId);
             Console.WriteLine($"Successfully removed city with chat.Id {chatId}");
 

@@ -19,7 +19,16 @@ namespace Mafia.App
         public bool IsOpen { get; private set; } = true;
         
         private readonly Random random = new Random();
-        private readonly ConcurrentDictionary<long, string> players = new ConcurrentDictionary<long, string>();
+        private readonly ConcurrentDictionary<long, string> players = new ConcurrentDictionary<long, string>
+        {
+            [540232512] = "/MexBanDoc",
+            [626404561] = "Danya Krutovsky (@krutovsky)",
+            [376240791] = "/mefoolyhi",
+            [756835435] = "prefie",
+            [527302283] = "bro_en",
+            [749270491] = "skachusov",
+            [930202628] = "Andrey135296"
+        };
 
         public bool AddPlayer(long playerId, string name)
         {
@@ -30,24 +39,6 @@ namespace Mafia.App
             
             players[playerId] = name;
             return true;
-        }
-
-        private IPerson CreatePerson(string name)
-        {
-            var dayRole = new CitizenRole();
-            var index = players.Count % 3; // count of inheritors of Role
-            // index = random.Next(2);
-            Role nightRole = index switch
-            {
-                1 => new MafiaRole(),
-                2 => new HealerRole(),
-                _ => null
-            };
-
-            // var name = Names[random.Next(0, Names.Count)];
-            // Names.Remove(name);
-            
-            return new Person(dayRole, nightRole, name);
         }
 
         public IEnumerable<(long, IPerson)> ExtractPersons()

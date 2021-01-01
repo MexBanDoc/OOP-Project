@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Mafia.Domain
 {
@@ -22,49 +23,49 @@ namespace Mafia.Domain
         {
         }
 
-        public void ProcessNight()
+        public async Task ProcessNight()
         {
             city.StartNight();
-            DoInteractions(DayTime.Night);
+            await DoInteractions(DayTime.Night);
         }
 
-        public void StartGame()
+        public async Task StartGame()
         {
             while (GetGameStatus() == WinState.InProcess)
             {
-                ProcessNight();
-                userInterface.TellResults(city, DayTime.Night);
+                await ProcessNight();
+                await userInterface.TellResults(city, DayTime.Night);
                 if (GetGameStatus() != WinState.InProcess)
                 {
                     break;
                 }
-                ProcessDay();
-                userInterface.TellResults(city, DayTime.Day);
+                await ProcessDay();
+                await userInterface.TellResults(city, DayTime.Day);
             }
             
-            userInterface.TellGameResult(GetGameStatus(), city);
+            await userInterface.TellGameResult(GetGameStatus(), city);
         }
 
         public WinState GetGameStatus() => settings.WinCondition(city);
         
-        public void ProcessDay()
+        public async Task ProcessDay()
         {
             city.StartDay();
-            DoInteractions(DayTime.Day);
+            await DoInteractions(DayTime.Day);
         }
 
-        private void DoInteractions(DayTime dayTime)
+        private async Task DoInteractions(DayTime dayTime)
         {
             if (dayTime == DayTime.Day)
             {
-                UpdateCityChanges(new CitizenRole(), person => true);
+                await UpdateCityChanges(new CitizenRole(), person => true);
             }
             else
             {
-                foreach (var role in city.Roles.Where(r => r.DayTime == dayTime))
-                {
-                    UpdateCityChanges(role, person => role.Equals(person.NightRole));
-                }
+                var tasks = city.Roles
+                    .Where(r => r.DayTime == dayTime)
+                    .Select(role => UpdateCityChanges(role, person => role.Equals(person.NightRole)));
+                await Task.WhenAll(tasks);
             }
 
             foreach (var cityLastChange in 
@@ -74,10 +75,10 @@ namespace Mafia.Domain
             }
         }
 
-        private void UpdateCityChanges(Role role, Func<IPerson, bool> validate)
+        private async Task UpdateCityChanges(Role role, Func<IPerson, bool> validate)
         {
             var band = city.Population.Where(p => p.IsAlive).Where(validate);
-            var target = userInterface.AskForInteractionTarget(band, role, city);
+            var target = await userInterface.AskForInteractionTarget(band, role, city);
             if (target == null)
             {
                 return;

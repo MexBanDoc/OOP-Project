@@ -81,6 +81,7 @@
     <Compile Include="Domain\Roles\WhoreRole.cs" />
     <Compile Include="Domain\Settings.cs" />
     <Compile Include="Infrastructure\MoreLinq.cs" />
+    <Compile Include="Infrastructure\Resources.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
