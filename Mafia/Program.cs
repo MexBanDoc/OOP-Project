@@ -12,7 +12,7 @@ namespace Mafia
             Console.WriteLine("U alive now");
             var bot = new TgBot();
             Thread.Sleep(-1);
-            var Game = new Game(Settings.Default, bot);
+            // var Game = new Game(Settings.Default, bot);
         }
     }
 }

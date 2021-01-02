@@ -18,11 +18,13 @@ namespace Mafia.Domain
             this.userInterface = userInterface;
         }
 
-        public Game(ISettings settings, IUserInterface userInterface)
-            : this(settings, new City(new List<IPerson>(settings.GeneratePopulation()), settings.CityName),
-                userInterface)
-        {
-        }
+        // public Game(ISettings settings, IUserInterface userInterface)
+        //     : this(settings,
+        //         new City(new List<IPerson>(settings.GeneratePopulation(new[] {"Null"}, new Random())),
+        //             settings.CityName),
+        //         userInterface)
+        // {
+        // }
 
         public async Task ProcessNight()
         {
@@ -32,10 +34,15 @@ namespace Mafia.Domain
 
         public async Task StartGame()
         {
-            while (GetGameStatus() == WinState.InProcess)
+            while (true)
             {
+                if (GetGameStatus() != WinState.InProcess)
+                {
+                    break;
+                }
                 await ProcessNight();
                 await userInterface.TellResults(city, DayTime.Night);
+                
                 if (GetGameStatus() != WinState.InProcess)
                 {
                     break;

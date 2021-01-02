@@ -62,20 +62,44 @@ namespace Tests.IntegrationTests
         [Test]
         public void PeacefulWins()
         {
-            var game = new Game(Settings.Default, new ConsoleInterface());
-            game.StartGame();
+            var city = new City(Settings.Default.GeneratePopulation(new[]
+                        {
+                            "Timofey",
+                            "ЛЕНА",
+                            "Android",
+                            "Дыня",
+                            "God"
+                        },
+                        new Random())
+                    .ToHashSet(),
+                Settings.Default.CityName);
+            var game = new Game(Settings.Default, city, new ConsoleInterface());
+            game.StartGame().Wait();
             game.GetGameStatus().Should().Be(WinState.PeacefulWins);
         }
 
         [Test]
         public void MafiaWins()
         {
-            var game = new Game(new Settings(
+            var settings = new Settings(
                 Settings.DefaultWinCondition,
-                new List<Tuple<Role, int>>{
-                    Tuple.Create((Role)new CitizenRole(), 6), Tuple.Create((Role)new MafiaRole(), 3)},
-                6), new ConsoleInterface());
-            game.StartGame();
+                new Dictionary<Role, int>
+                {
+                    [new MafiaRole()] = 50
+                });
+            var city = new City(settings.GeneratePopulation(new[]
+                        {
+                            "Timofey",
+                            "ЛЕНА",
+                            "Android",
+                            "Дыня",
+                            "God"
+                        },
+                        new Random())
+                    .ToHashSet(),
+                settings.CityName);
+            var game = new Game(settings, city, new ConsoleInterface());
+            game.StartGame().Wait();
             game.GetGameStatus().Should().Be(WinState.MafiaWins);
         }
     }

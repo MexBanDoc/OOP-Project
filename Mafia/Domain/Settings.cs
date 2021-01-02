@@ -9,28 +9,45 @@ namespace Mafia.Domain
     {
         public Func<ICity, WinState> WinCondition { get; }
         public string CityName { get; } = "CumCockCity";
-        public List<Tuple<Role, int>> PlayerDistribution { get; }
-        public int TotalPlayers { get; }
+        public Dictionary<Role, int> PlayerDistribution { get; }
 
-        public Settings(Func<ICity, WinState> winCondition, List<Tuple<Role, int>> playerDistribution, int totalPlayers)
+        public Settings(Func<ICity, WinState> winCondition, Dictionary<Role, int> playerDistribution)
         {
             WinCondition = winCondition;
             PlayerDistribution = playerDistribution;
-            TotalPlayers = totalPlayers;
         }
 
-        public IEnumerable<IPerson> GeneratePopulation()
+        public IEnumerable<IPerson> GeneratePopulation(string[] names, Random random)
         {
-            var dayDistribution = PlayerDistribution.Where(t => t.Item1.DayTime == DayTime.Day);
-            var nightDistribution = PlayerDistribution.Where(t => t.Item1.DayTime == DayTime.Night);
-            var dayRoles = dayDistribution.Multiply().ToList();
-            var nightRoles = nightDistribution.Multiply().ToList();
-            for (int i = 0; i < TotalPlayers; i++)
-                yield return new Person(dayRoles.Count > i ? dayRoles[i] : null,
-                    nightRoles.Count > i ? nightRoles[i] : null, $"Person{i}");
+            var result = new IPerson[names.Length];
+
+            var indexes = Enumerable.Range(0, names.Length)
+                .OrderBy(x => random.Next()).ToList();
+
+            var currentIndex = 0;
+            var citizen = new CitizenRole();
+
+            foreach (var role in PlayerDistribution.Keys)
+            {
+                var playersCount = Math.Max(PlayerDistribution[role] * names.Length / 100, 1);
+                var upper = Math.Min(currentIndex + playersCount, names.Length);
+                for (var i = currentIndex; i < upper; i++)
+                {
+                    result[indexes[i]] = new Person(citizen, role, names[indexes[i]]);
+                }
+
+                currentIndex += playersCount;
+            }
+
+            for (; currentIndex < indexes.Count; currentIndex++)
+            {
+                result[indexes[currentIndex]] = new Person(citizen, null, names[indexes[currentIndex]]);
+            }
+
+            return result;
         }
 
-        public static readonly Func<ICity, WinState> DefaultWinCondition = (city) =>
+        public static WinState DefaultWinCondition(ICity city)
         {
             var mafiaCount = city.Population.Count(p => p.NightRole is MafiaRole && p.IsAlive);
             var totalCount = city.Population.Count(p => p.IsAlive);
@@ -39,11 +56,12 @@ namespace Mafia.Domain
             if (totalCount >= 1 && totalCount - mafiaCount <= 1)
                 return WinState.MafiaWins;
             return WinState.InProcess;
-        };
+        }
         
-        public static readonly Settings Default = new Settings(DefaultWinCondition,
-            new List<Tuple<Role, int>>
-                {Tuple.Create((Role) new MafiaRole(), 1), Tuple.Create((Role) new CitizenRole(), 4)},
-            4);
+        public static readonly Settings Default = new Settings(DefaultWinCondition, 
+            new Dictionary<Role, int> {[new MafiaRole()] = 20});
     }
+    
+    // TODO: at least one of every role
+    // TODO: up count to percentage
 }

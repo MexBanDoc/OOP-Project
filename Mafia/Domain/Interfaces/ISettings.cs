@@ -8,9 +8,9 @@ namespace Mafia.Domain
         public Func<ICity, WinState> WinCondition { get; }
         
         public string CityName { get; }
-        public List<Tuple<Role, int>> PlayerDistribution { get; }
-        public int TotalPlayers { get; }
+        
+        public Dictionary<Role, int> PlayerDistribution { get; }
 
-        public IEnumerable<IPerson> GeneratePopulation();
+        public IEnumerable<IPerson> GeneratePopulation(string[] names, Random random);
     }
 }

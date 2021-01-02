@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
 using Mafia.Domain;
@@ -9,8 +10,16 @@ namespace Tests.TestDomain
     [TestFixture]
     public class TestCity
     {
-        private static City city =
-            new City(new List<IPerson>(Settings.Default.GeneratePopulation()), Settings.Default.CityName);
+        private static readonly City City =
+            new City(new List<IPerson>(Settings.Default.GeneratePopulation(new[]
+                    {
+                        "Mafia",
+                        "Peaceful1",
+                        "Peaceful2",
+                        "Peaceful3"
+                    },
+                    new Random(1984))),
+                Settings.Default.CityName);
 
         [Test]
         public void TestConstructor()
@@ -18,7 +27,7 @@ namespace Tests.TestDomain
             var mafia = new MafiaRole();
             var doctor = new HealerRole();
             var citizen = new CitizenRole();
-            var city = new City(new List<IPerson>(
+            var localCity = new City(new List<IPerson>(
                 new[]
                 {
                     new Person(citizen, doctor, "Bob"),
@@ -26,8 +35,8 @@ namespace Tests.TestDomain
                     new Person(citizen, null, "Ira"),
                 }), Settings.Default.CityName);
 
-            city.Roles.Count.Should().Be(3);
-            city.Roles.Should().BeEquivalentTo(citizen, mafia, doctor);
+            localCity.Roles.Count.Should().Be(3);
+            localCity.Roles.Should().BeEquivalentTo(citizen, mafia, doctor);
         }
         
         public static IEnumerable<TestCaseData> TestGetPersonByName
@@ -37,32 +46,32 @@ namespace Tests.TestDomain
                 yield return new TestCaseData(null, null);
                 yield return new TestCaseData("", null);
                 yield return new TestCaseData("Person77", null);
-                yield return new TestCaseData("Person0", city.Population.First());
+                yield return new TestCaseData("Mafia", City.Population.First());
             }
         }
 
-        [TestCaseSource("TestGetPersonByName")]
+        [TestCaseSource(nameof(TestGetPersonByName))]
         public void GetPersonByName(string name, IPerson person)
         {
-            city.GetPersonByName(name).Should().BeEquivalentTo(person);
+            City.GetPersonByName(name).Should().BeEquivalentTo(person);
         }
 
         [Test]
         public void StartDay()
         {
-            city.StartDay();
-            city.DayTime.Should().Be(DayTime.Day);
-            city.LastChanges.Should().BeEmpty();
-            foreach (var person in city.Population)
+            City.StartDay();
+            City.DayTime.Should().Be(DayTime.Day);
+            City.LastChanges.Should().BeEmpty();
+            foreach (var person in City.Population)
                 person.IsImmortal.Should().BeFalse();
         }
 
         [Test]
         public void StartNight()
         {
-            city.StartNight();
-            city.DayTime.Should().Be(DayTime.Night);
-            city.LastChanges.Should().BeEmpty();
+            City.StartNight();
+            City.DayTime.Should().Be(DayTime.Night);
+            City.LastChanges.Should().BeEmpty();
         }
 
         public static IEnumerable<TestCaseData> TestAddChange
@@ -74,7 +83,7 @@ namespace Tests.TestDomain
             }
         }
 
-        [TestCaseSource("TestAddChange")]
+        [TestCaseSource(nameof(TestAddChange))]
         public void AddChangeSuccess(IPerson target, Role role)
         {
             
@@ -84,10 +93,10 @@ namespace Tests.TestDomain
         public static void AddChangeError()
         {
             var person = new Person(new CitizenRole(), new HealerRole(), "Bob");
-            city.LastChanges.ContainsKey(person).Should().BeFalse();
-            city.AddChange(person, new MafiaRole().Interact(person));
-            city.LastChanges.Count.Should().Be(1);
-            city.LastChanges.Should().Contain(person, PersonState.Killed);
+            City.LastChanges.ContainsKey(person).Should().BeFalse();
+            City.AddChange(person, new MafiaRole().Interact(person));
+            City.LastChanges.Count.Should().Be(1);
+            City.LastChanges.Should().Contain(person, PersonState.Killed);
         }
     }
 }
