@@ -235,21 +235,32 @@ namespace Mafia.App
             }
         }
 
+        private SemaphoreSlim playSemaphoreSlim = new SemaphoreSlim(1, 1);
+        
         private async Task PlayMethod(Chat chat, User user)
         {
-            if (!playersPools.ContainsKey(chat.Id))
+            var lockTaken = false;
+
+            try
             {
-                playersPools[chat.Id] = new PlayersPool();
-                await bot.SendTextMessageAsync(chat.Id, "Record to game started!");
+                await playSemaphoreSlim.WaitAsync();
+                lockTaken = true;
+                
+                if (!playersPools.ContainsKey(chat.Id))
+                {
+                    playersPools[chat.Id] = new PlayersPool();
+                    await bot.SendTextMessageAsync(chat.Id, "Record to game started!");
+                }
+            }
+            finally
+            {
+                if (lockTaken)
+                {
+                    playSemaphoreSlim.Release();
+                }
             }
 
             var pool = playersPools[chat.Id];
-
-            if (!pool.IsOpen)
-            {
-                await bot.SendTextMessageAsync(chat.Id, "Sorry, record is end up");
-                return;
-            }
 
             var userName = $"{user.FirstName} {user.LastName} (@{user.Username})";
             var message = pool.AddPlayer(user.Id, userName)
@@ -276,9 +287,30 @@ namespace Mafia.App
 
         private async Task EndRecordMethod(long chatId)
         {
-            if (!playersPools.ContainsKey(chatId))
+            IPlayersPool pool;
+
+            var lockTaken = false;
+
+            try
             {
-                await bot.SendTextMessageAsync(chatId, $"There no opened game record\nType {PlayCommand} to start one");
+                await playSemaphoreSlim.WaitAsync();
+                lockTaken = true;
+                
+                if (!playersPools.TryRemove(chatId, out pool))
+                {
+                    await bot.SendTextMessageAsync(chatId, $"There no opened game record\nType {PlayCommand} to start one");
+                }
+            }
+            finally
+            {
+                if (lockTaken)
+                {
+                    playSemaphoreSlim.Release();
+                }
+            }
+
+            if (pool == null)
+            {
                 return;
             }
             
@@ -286,12 +318,9 @@ namespace Mafia.App
             // TODO: save chatId -> settings
 
             var population = new List<IPerson>();
-            var pool = playersPools[chatId];
 
             var settings = Settings.Various;
-            
-            // TODO: use semaphore
-            
+
             foreach (var (userId, person) in pool.ExtractPersons(settings))
             {
                 population.Add(person);
@@ -302,8 +331,6 @@ namespace Mafia.App
                 await SendUsersSaveMessage(message, userId, chatId);
             }
 
-            playersPools.TryRemove(chatId, out pool); // TODO: handle when fails to remove
-            
             var city = new City(population, settings.CityName);
             cityToChat[city] = chatId;
             citiToAwake[city] = true;

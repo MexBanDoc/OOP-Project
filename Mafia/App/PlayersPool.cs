@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using Mafia.Domain;
 
 namespace Mafia.App
@@ -15,9 +14,7 @@ namespace Mafia.App
         //     "Benjamin", "Amelia", "Lucas", "Mia",
         //     "Mason", "Harper", "Ethan", "Evelyn"
         // };
-        
-        public bool IsOpen { get; private set; } = true;  // TODO: remove
-        
+
         private readonly Random random = new Random();
         private readonly ConcurrentDictionary<long, string> players = new ConcurrentDictionary<long, string>
         {
@@ -43,8 +40,6 @@ namespace Mafia.App
 
         public IEnumerable<(long, IPerson)> ExtractPersons(ISettings settings)
         {
-            IsOpen = false;
-            
             var ids = new long[players.Count];
             var names = new string[players.Count];
             var i = 0;

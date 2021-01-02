@@ -5,7 +5,6 @@ namespace Mafia.App
 {
     public interface IPlayersPool
     {
-        bool IsOpen { get; }
         bool AddPlayer(long playerId, string name);
         IEnumerable<(long, IPerson)> ExtractPersons(ISettings settings);
     }

@@ -85,12 +85,6 @@ namespace Mafia.Domain
                     continue;
                 }
 
-                if (roles[i] == null)
-                {
-                    Console.WriteLine("Role is null");
-                    continue;
-                }
-
                 city.AddChange(target, roles[i].Interact(target));
             }
 
