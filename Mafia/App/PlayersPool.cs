@@ -16,7 +16,7 @@ namespace Mafia.App
         //     "Mason", "Harper", "Ethan", "Evelyn"
         // };
         
-        public bool IsOpen { get; private set; } = true;
+        public bool IsOpen { get; private set; } = true;  // TODO: remove
         
         private readonly Random random = new Random();
         private readonly ConcurrentDictionary<long, string> players = new ConcurrentDictionary<long, string>
@@ -44,16 +44,23 @@ namespace Mafia.App
         public IEnumerable<(long, IPerson)> ExtractPersons(ISettings settings)
         {
             IsOpen = false;
-            var pool = players.ToList();
             
-            // TODO: Change all (delegate to settings)
+            var ids = new long[players.Count];
+            var names = new string[players.Count];
+            var i = 0;
 
-            return ForMethod(new MafiaRole(), 4, pool)
-                .Concat(ForMethod(new PoliсemanRole(), 6, pool))
-                .Concat(ForMethod(new HealerRole(), 5, pool))
-                // .Concat(ForMethod(new WhoreRole(), 4, pool))
-                .Concat(ForMethod(new SantaClausRole(), 3, pool))
-                .Concat(ForMethod(null, 1, pool));
+            foreach (var player in players)
+            {
+                ids[i] = player.Key;
+                names[i++] = player.Value;
+            }
+
+            i = 0;
+
+            foreach (var person in settings.GeneratePopulation(names, random))
+            {
+                yield return (ids[i++], person);
+            }
         }
 
         private IEnumerable<(long, IPerson)> ForMethod(Role role, int part, IList<KeyValuePair<long, string>> pool)

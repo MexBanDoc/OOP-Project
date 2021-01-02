@@ -9,7 +9,5 @@
             person.Name = name.Insert(name.Length, "🍾🎁");
             return PersonState.Alive;
         }
-
-        public PersonState ResultTargetState { get; } = PersonState.Alive;
     }
 }

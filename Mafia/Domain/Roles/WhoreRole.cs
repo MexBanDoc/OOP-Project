@@ -4,7 +4,7 @@ namespace Mafia.Domain
 {
     public class WhoreRole : Role
     {
-        public WhoreRole() : base(new List<IInteraction>() {new HealInteraction(), new CrazyInteraction()})
+        public WhoreRole() : base(new List<IInteraction> {new HealInteraction(), new CrazyInteraction()})
         {
         }
 

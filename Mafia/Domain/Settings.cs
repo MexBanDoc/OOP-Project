@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Mafia.Infrastructure;
 
 namespace Mafia.Domain
 {
@@ -58,10 +57,19 @@ namespace Mafia.Domain
             return WinState.InProcess;
         }
         
-        public static readonly Settings Default = new Settings(DefaultWinCondition, 
+        public static readonly ISettings Default = new Settings(DefaultWinCondition, 
             new Dictionary<Role, int> {[new MafiaRole()] = 20});
+        
+        public static readonly ISettings Various = new Settings(DefaultWinCondition,
+            new Dictionary<Role, int>
+            {
+                [new MafiaRole()] = 20,
+                [new HealerRole()] = 10,
+                [new PoliсemanRole()] = 10,
+                [new SantaClausRole()] = 25,
+                [new WhoreRole()] = 25
+            });
+        
+        // TODO: create a few settings
     }
-    
-    // TODO: at least one of every role
-    // TODO: up count to percentage
 }

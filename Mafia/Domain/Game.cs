@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Mafia.Domain
@@ -17,14 +17,6 @@ namespace Mafia.Domain
             this.city = city;
             this.userInterface = userInterface;
         }
-
-        // public Game(ISettings settings, IUserInterface userInterface)
-        //     : this(settings,
-        //         new City(new List<IPerson>(settings.GeneratePopulation(new[] {"Null"}, new Random())),
-        //             settings.CityName),
-        //         userInterface)
-        // {
-        // }
 
         public async Task ProcessNight()
         {
@@ -82,16 +74,31 @@ namespace Mafia.Domain
                 cityLastChange.Key.TryKill();
             }
         }
+        
+        private readonly SemaphoreSlim updateCitySemaphore = new SemaphoreSlim(1, 1);
 
         private async Task UpdateCityChanges(Role role, Func<IPerson, bool> validate)
         {
             var band = city.Population.Where(p => p.IsAlive).Where(validate);
             var target = await userInterface.AskForInteractionTarget(band, role, city);
-            if (target == null)
+            if (target == null) return;
+
+            var lockTaken = false;
+            
+            try
             {
-                return;
+                await updateCitySemaphore.WaitAsync();
+                lockTaken = true;
+                
+                city.AddChange(target, role.Interact(target));
             }
-            city.AddChange(target, role.Interact(target));
+            finally
+            {
+                if (lockTaken)
+                {
+                    updateCitySemaphore.Release();
+                }
+            }
         }
     }
 }

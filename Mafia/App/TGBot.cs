@@ -288,8 +288,12 @@ namespace Mafia.App
 
             var population = new List<IPerson>();
             var pool = playersPools[chatId];
+
+            var settings = Settings.Various;
             
-            foreach (var (userId, person) in pool.ExtractPersons(null))
+            // TODO: use semaphore
+            
+            foreach (var (userId, person) in pool.ExtractPersons(settings))
             {
                 population.Add(person);
                 personToChat[person] = userId;
@@ -302,10 +306,10 @@ namespace Mafia.App
             playersPools.TryRemove(chatId, out pool); // TODO: handle when fails to remove
             
             // TODO: extract name from setting
-            var city = new City(population, Settings.Default.CityName);
+            var city = new City(population, settings.CityName);
             cityToChat[city] = chatId;
             citiToAwake[city] = true;
-            var game = new Game(Settings.Default, city, this);
+            var game = new Game(settings, city, this);
 
             await RunGame(city, game);
         }
