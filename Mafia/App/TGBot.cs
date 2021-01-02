@@ -121,7 +121,7 @@ namespace Mafia.App
 
             var result = votedTargets[Math.Max(0, random.Next(votedTargets.Count) - 1)];
             
-            // bot.SendTextMessageAsync(chatId, $"{role.Name} chosen {result.Name}").Wait();
+            // await bot.SendTextMessageAsync(cityToChat[city], $"{choosers.FirstOrDefault()?.NightRole.Name} chosen {result?.Name}");
 
             return result;
         }
@@ -211,7 +211,7 @@ namespace Mafia.App
             var chat = message.Chat;
             var user = message.From;
             
-            Console.WriteLine($"{user.Username}: {user.Id}");
+            // Console.WriteLine($"{user.Username}: {user.Id}");
             if (message.Text == null)
             {
                 return;
@@ -284,7 +284,6 @@ namespace Mafia.App
             
             // TODO: while everyone types /play someone creates settings
             // TODO: save chatId -> settings
-            // TODO: from settings extract winCondition and Population
 
             var population = new List<IPerson>();
             var pool = playersPools[chatId];
@@ -305,7 +304,6 @@ namespace Mafia.App
 
             playersPools.TryRemove(chatId, out pool); // TODO: handle when fails to remove
             
-            // TODO: extract name from setting
             var city = new City(population, settings.CityName);
             cityToChat[city] = chatId;
             citiToAwake[city] = true;

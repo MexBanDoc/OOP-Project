@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Mafia.Domain
@@ -14,6 +15,7 @@ namespace Mafia.Domain
 
         public PersonState Interact(IPerson person)
         {
+            Console.WriteLine($"{Name} starts interact");
             return interactions.Select(inter => inter.Interact(person)).Max();
         }
 

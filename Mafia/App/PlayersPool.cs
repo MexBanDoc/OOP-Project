@@ -62,21 +62,5 @@ namespace Mafia.App
                 yield return (ids[i++], person);
             }
         }
-
-        private IEnumerable<(long, IPerson)> ForMethod(Role role, int part, IList<KeyValuePair<long, string>> pool)
-        {
-            for (var i = 0; i < (players.Count + part - 1) / part; i++)
-            {
-                var index = Math.Max(0, random.Next(pool.Count) - 1);
-                if (index >= pool.Count)
-                {
-                    continue;
-                }
-                var id = pool[index].Key;
-                var name = pool[index].Value;
-                pool.RemoveAt(index);
-                yield return (id, new Person(new CitizenRole(), role, name));
-            }
-        }
     }
 }

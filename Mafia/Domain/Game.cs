@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Mafia.Domain
@@ -56,16 +56,42 @@ namespace Mafia.Domain
 
         private async Task DoInteractions(DayTime dayTime)
         {
+            var tasks = new List<Task<IPerson>>();
+            var roles = new List<Role>();
+            
             if (dayTime == DayTime.Day)
             {
-                await UpdateCityChanges(new CitizenRole(), person => true);
+                var citizen = new CitizenRole();
+                roles.Add(citizen);
+                tasks.Add(UpdateCityChanges(citizen, person => true));
             }
             else
             {
-                var tasks = city.Roles
-                    .Where(r => r.DayTime == dayTime)
-                    .Select(role => UpdateCityChanges(role, person => role.Equals(person.NightRole)));
-                await Task.WhenAll(tasks);
+                foreach (var role in city.Roles.Where(r => r.DayTime == dayTime))
+                {
+                    roles.Add(role);
+                    tasks.Add(UpdateCityChanges(role, person => role.Equals(person.NightRole)));
+                }
+            }
+            
+            await Task.WhenAll(tasks);
+
+            for (var i = 0; i < tasks.Count; i++)
+            {
+                var target = tasks[i].Result;
+                if (target == null)
+                {
+                    Console.WriteLine("Target is null");
+                    continue;
+                }
+
+                if (roles[i] == null)
+                {
+                    Console.WriteLine("Role is null");
+                    continue;
+                }
+
+                city.AddChange(target, roles[i].Interact(target));
             }
 
             foreach (var cityLastChange in 
@@ -74,31 +100,11 @@ namespace Mafia.Domain
                 cityLastChange.Key.TryKill();
             }
         }
-        
-        private readonly SemaphoreSlim updateCitySemaphore = new SemaphoreSlim(1, 1);
 
-        private async Task UpdateCityChanges(Role role, Func<IPerson, bool> validate)
+        private async Task<IPerson> UpdateCityChanges(Role role, Func<IPerson, bool> validate)
         {
             var band = city.Population.Where(p => p.IsAlive).Where(validate);
-            var target = await userInterface.AskForInteractionTarget(band, role, city);
-            if (target == null) return;
-
-            var lockTaken = false;
-            
-            try
-            {
-                await updateCitySemaphore.WaitAsync();
-                lockTaken = true;
-                
-                city.AddChange(target, role.Interact(target));
-            }
-            finally
-            {
-                if (lockTaken)
-                {
-                    updateCitySemaphore.Release();
-                }
-            }
+            return await userInterface.AskForInteractionTarget(band, role, city);
         }
     }
 }
