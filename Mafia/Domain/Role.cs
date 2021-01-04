@@ -33,9 +33,10 @@ namespace Mafia.Domain
         
         public static bool operator ==(Role first, Role second)
         {
+            object other = second;
             if ((object) first == null)
-                return (object) second == null;
-            return first.Equals(second);
+                return other == null;
+            return first.Equals(other);
         }
 
         public static bool operator !=(Role role, Role obj)

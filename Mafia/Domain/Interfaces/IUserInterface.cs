@@ -8,7 +8,7 @@ namespace Mafia.Domain
     {
         public Task AskForInteractionTarget(IEnumerable<IPerson> players, Role role, ICity city);
 
-        public Task<IPerson> GetInteractionTarget(Role role, string cityName);
+        public Task<IPerson> GetInteractionTarget(Role role, ICity city);
 
         public Task TellResults(ICity city, DayTime dayTime);
 

@@ -35,7 +35,7 @@ namespace Tests.IntegrationTests
                 return Task.CompletedTask;
             }
 
-            public Task<IPerson> GetInteractionTarget(Role role, string cityName)
+            public Task<IPerson> GetInteractionTarget(Role role, ICity city)
             {
                 return Task.FromResult(targets.ContainsKey(role) ? targets[role] : null);
             }

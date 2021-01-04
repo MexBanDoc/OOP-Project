@@ -52,8 +52,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="App\CityVotingPool.cs" />
     <Compile Include="App\IPlayersPool.cs" />
     <Compile Include="App\PlayersPool.cs" />
+    <Compile Include="App\RoleVotingPool.cs" />
     <Compile Include="App\TGBot.cs" />
     <Compile Include="Domain\City.cs" />
     <Compile Include="Domain\Enums\DayTime.cs" />

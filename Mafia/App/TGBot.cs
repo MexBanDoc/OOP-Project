@@ -16,8 +16,6 @@ using Game = Mafia.Domain.Game;
 
 namespace Mafia.App
 {
-    // TODO: polls -> /name@city
-    
     // TODO: separate how to talk and what to talk
     
     public class TgBot : IUserInterface
@@ -26,16 +24,24 @@ namespace Mafia.App
         private readonly User me;
         
         private readonly Random random = new Random();
-        private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
+
+        private readonly SemaphoreSlim playSemaphore = new SemaphoreSlim(1, 1);
 
         private readonly ConcurrentDictionary<long, IPlayersPool> playersPools =
             new ConcurrentDictionary<long, IPlayersPool>();
+        
         private readonly ConcurrentDictionary<IPerson, long> personToChat = new ConcurrentDictionary<IPerson, long>();
+        
         private readonly ConcurrentDictionary<ICity, long> cityToChat = new ConcurrentDictionary<ICity, long>();
+        
+        private readonly SemaphoreSlim cityAwakeSemaphore = new SemaphoreSlim(1, 1);
         private readonly ConcurrentDictionary<ICity, bool> citiToAwake = new ConcurrentDictionary<ICity, bool>();
         
-        private const int VoteDelay = 30;
-        
+        private readonly SemaphoreSlim cityVotingSemaphore = new SemaphoreSlim(1, 1);
+        private readonly ConcurrentDictionary<string, CityVotingPool> cityVotingPools =
+            new ConcurrentDictionary<string, CityVotingPool>();
+
+
         public async Task AskForInteractionTarget(IEnumerable<IPerson> players, Role role, ICity city)
         {
             if (!cityToChat.ContainsKey(city)) return;
@@ -47,17 +53,45 @@ namespace Mafia.App
 
             if (role.DayTime == DayTime.Day)
             {
-                await AskJudgedPerson(city, choosers);
+                await AskJudgedPerson(city, role, choosers);
             }
             else
             {
-                await AskRoleForInteractionTarget(city, choosers);
+                await AskRoleForInteractionTarget(city, role, choosers);
             }
         }
 
-        public Task<IPerson> GetInteractionTarget(Role role, string cityName)
+        public async Task<IPerson> GetInteractionTarget(Role role, ICity city)
         {
-            throw new NotImplementedException();
+            if (!cityVotingPools.ContainsKey(city.Name))
+            {
+                return null;
+            }
+
+            var votingPool = cityVotingPools[city.Name];
+
+            var result = votingPool.ExtractRoleVoteWinner(role);
+
+            if (!votingPool.IsEmpty) return city.GetPersonByName(result);
+            
+            var lockTaken = false;
+
+            try
+            {
+                await cityVotingSemaphore.WaitAsync();
+                lockTaken = true;
+
+                cityVotingPools.TryRemove(city.Name, out votingPool);
+            }
+            finally
+            {
+                if (lockTaken)
+                {
+                    cityVotingSemaphore.Release();
+                }
+            }
+
+            return city.GetPersonByName(result);
         }
 
         private async Task TellGreetingsToRole(Role role, ICity city)
@@ -67,7 +101,7 @@ namespace Mafia.App
             
             try
             {
-                await semaphore.WaitAsync();
+                await cityAwakeSemaphore.WaitAsync();
                 lockTaken = true;
                 
                 if (role.DayTime == DayTime.Day)
@@ -90,72 +124,143 @@ namespace Mafia.App
             {
                 if (lockTaken)
                 {
-                    semaphore.Release();
+                    cityAwakeSemaphore.Release();
                 }
             }
         }
 
-        private async Task<IPerson> AskRoleForInteractionTarget(ICity city, IReadOnlyCollection<IPerson> choosers)
+        private async Task AskRoleForInteractionTarget(ICity city, Role role, IReadOnlyCollection<IPerson> choosers)
         {
-            var targets = city.Population
+            var names = city.Population
                 .Where(p => p.IsAlive && !choosers.Contains(p))
                 .Select(p => p.Name).ToArray();
 
-            if (targets.Length == 1)
+            await AddCityVoting(city.Name);
+
+            var messageText = CreateMessageText("<b>Who will be your target?</b>\n\n", city.Name, names);
+            
+            var cityVotingPool = cityVotingPools[city.Name];
+
+            foreach (var userId in choosers.Select(person => personToChat[person]))
+            {
+                cityVotingPool.AddChatId(userId);
+                cityVotingPool.AddRole(userId, role);
+            }
+            
+            var roleVoting = new RoleVotingPool(names);
+            cityVotingPool.AddRoleVoting(role, roleVoting);
+            
+            if (names.Length == 1)
             {
                 // bot.SendTextMessageAsync(chatId, $"{role.Name} automatically chosen {targets[0]}").Wait();
-                return city.GetPersonByName(targets[0]);
+                roleVoting.Vote(0, 0); // illegal move
+                return;
             }
-
-            var pollMessages = choosers
-                .Select(chooser => personToChat[chooser])
-                .Select(userId => bot.SendPollAsync(userId, "Who will be your target?", targets).Result)
-                .ToList();
-
-            await Task.Delay(TimeSpan.FromSeconds(VoteDelay));
-
-            var votedTargets = new List<IPerson>();
-            foreach (var poll in pollMessages.Select(message =>
-                bot.StopPollAsync(message.Chat.Id, message.MessageId).Result))
-            {
-                // foreach (var option in poll.Options)
-                //     bot.SendTextMessageAsync(chatId, $"{option.Text} chosen by {option.VoterCount}").Wait();
-                // bot.SendTextMessageAsync(chatId, $"Total votes {poll.TotalVoterCount}").Wait();
-
-                var winner = poll.Options.OrderBy(option => option.VoterCount).Last().Text;
-
-                votedTargets.Add(city.GetPersonByName(winner));
-            }
-
-            if (votedTargets.Count == 0) return null;
-
-            var result = votedTargets[Math.Max(0, random.Next(votedTargets.Count) - 1)];
             
-            // await bot.SendTextMessageAsync(cityToChat[city], $"{choosers.FirstOrDefault()?.NightRole.Name} chosen {result?.Name}");
+            await Task.WhenAll(choosers.Select(person => bot.SendTextMessageAsync(personToChat[person], messageText, ParseMode.Html)));
 
-            return result;
+            // var pollMessages = choosers
+            //     .Select(chooser => personToChat[chooser])
+            //     .Select(userId => bot.SendPollAsync(userId, "Who will be your target?", names).Result)
+            //     .ToList();
+            //
+            // await Task.Delay(TimeSpan.FromSeconds(VoteDelay));
+            //
+            // var votedTargets = new List<IPerson>();
+            // foreach (var poll in pollMessages.Select(message =>
+            //     bot.StopPollAsync(message.Chat.Id, message.MessageId).Result))
+            // {
+            //     // foreach (var option in poll.Options)
+            //     //     bot.SendTextMessageAsync(chatId, $"{option.Text} chosen by {option.VoterCount}").Wait();
+            //     // bot.SendTextMessageAsync(chatId, $"Total votes {poll.TotalVoterCount}").Wait();
+            //
+            //     var winner = poll.Options.OrderBy(option => option.VoterCount).Last().Text;
+            //
+            //     votedTargets.Add(city.GetPersonByName(winner));
+            // }
+            //
+            // if (votedTargets.Count == 0) return null;
+            //
+            // var result = votedTargets[Math.Max(0, random.Next(votedTargets.Count) - 1)];
+            //
+            // // await bot.SendTextMessageAsync(cityToChat[city], $"{choosers.FirstOrDefault()?.NightRole.Name} chosen {result?.Name}");
+            //
+            // return result;
         }
 
-        private async Task<IPerson> AskJudgedPerson(ICity city, IReadOnlyCollection<IPerson> choosers)
+        private async Task AskJudgedPerson(ICity city, Role role, IReadOnlyCollection<IPerson> choosers)
         {
-            var chatId = cityToChat[city];
-            // bot.SendTextMessageAsync(chatId, $"Choosers {choosers.Count}").Wait();
-
-            if (choosers.Count < 2) return null;
-
-            var message = await bot.SendPollAsync(chatId, "Who will you judge?", choosers.Select(p => p.Name), isAnonymous: false);
+            if (choosers.Count < 2) return;
             
-            await Task.Delay(TimeSpan.FromSeconds(2 * VoteDelay));
+            var chatId = cityToChat[city];
 
-            var poll = await bot.StopPollAsync(chatId, message.MessageId);
+            await AddCityVoting(city.Name);
+            
+            var names = choosers.Select(p => p.Name).ToArray();
 
-            // foreach (var option in poll.Options)
-            //     bot.SendTextMessageAsync(chatId, $"{option.Text} chosen by {option.VoterCount}").Wait();
-            // bot.SendTextMessageAsync(chatId, $"Total votes {poll.TotalVoterCount}").Wait();
+            var messageText = CreateMessageText("<b>Who will you blame?</b>\n\n", city.Name, names);
 
-            var winner = poll.Options.OrderBy(option => option.VoterCount).Last().Text;
+            var cityVotingPool = cityVotingPools[city.Name];
+            
+            cityVotingPool.AddChatId(chatId);
+            foreach (var userId in choosers.Select(c => personToChat[c]))
+            {
+                cityVotingPool.AddRole(userId, role);
+            }
 
-            return city.GetPersonByName(winner);
+            var roleVoting = new RoleVotingPool(names);
+            cityVotingPool.AddRoleVoting(role, roleVoting);
+
+            await bot.SendTextMessageAsync(chatId, messageText, ParseMode.Html);
+
+            // // bot.SendTextMessageAsync(chatId, $"Choosers {choosers.Count}").Wait();
+            //
+            // var message = await bot.SendPollAsync(chatId, "Who will you judge?", choosers.Select(p => p.Name), isAnonymous: false);
+            //
+            // var poll = await bot.StopPollAsync(chatId, message.MessageId);
+            //
+            // // foreach (var option in poll.Options)
+            // //     bot.SendTextMessageAsync(chatId, $"{option.Text} chosen by {option.VoterCount}").Wait();
+            // // bot.SendTextMessageAsync(chatId, $"Total votes {poll.TotalVoterCount}").Wait();
+            //
+            // var winner = poll.Options.OrderBy(option => option.VoterCount).Last().Text;
+            //
+            // return city.GetPersonByName(winner);
+        }
+
+        private async Task AddCityVoting(string cityName)
+        {
+            var lockTaken = false;
+
+            try
+            {
+                await cityVotingSemaphore.WaitAsync();
+                lockTaken = true;
+
+                if (!cityVotingPools.ContainsKey(cityName))
+                {
+                    cityVotingPools[cityName] = new CityVotingPool();
+                }
+            }
+            finally
+            {
+                if (lockTaken)
+                {
+                    cityVotingSemaphore.Release();
+                }
+            }
+        }
+
+        private static string CreateMessageText(string title, string cityName, string[] names)
+        {
+            var messageText = new StringBuilder(title);
+            for (var i = 0; i < names.Length; i++)
+            {
+                messageText.Append(names[i]);
+                messageText.Append($"\n/{i}_{cityName}\n\n");
+            }
+
+            return messageText.ToString();
         }
 
         public async Task TellResults(ICity city, DayTime dayTime)
@@ -231,29 +336,34 @@ namespace Mafia.App
             {
                case PlayCommand:
                    await PlayMethod(chat, user);
-                   break;
+                   return;
                case EndRecordCommand: 
                    await EndRecordMethod(chat.Id); 
-                   break;
+                   return;
                case "/help":
                case "/start": 
                    await bot.SendTextMessageAsync(chat.Id, Resources.HelpMessage); 
-                   break;
+                   return;
                case "/guide":
                    await bot.SendTextMessageAsync(chat.Id, Resources.GuideMessage); 
-                   break;
+                   return;
+            }
+
+            var parts = message.Text.Split('_');
+            if (parts.Length == 2 && parts[0].Length > 1)
+            {
+                var index = parts[0].Substring(1);
+                await ConsiderVote(index, parts[1], chat.Id, user.Id);
             }
         }
 
-        private readonly SemaphoreSlim playSemaphoreSlim = new SemaphoreSlim(1, 1);
-        
         private async Task PlayMethod(Chat chat, User user)
         {
             var lockTaken = false;
 
             try
             {
-                await playSemaphoreSlim.WaitAsync();
+                await playSemaphore.WaitAsync();
                 lockTaken = true;
                 
                 if (!playersPools.ContainsKey(chat.Id))
@@ -266,7 +376,7 @@ namespace Mafia.App
             {
                 if (lockTaken)
                 {
-                    playSemaphoreSlim.Release();
+                    playSemaphore.Release();
                 }
             }
 
@@ -303,7 +413,7 @@ namespace Mafia.App
 
             try
             {
-                await playSemaphoreSlim.WaitAsync();
+                await playSemaphore.WaitAsync();
                 lockTaken = true;
                 
                 if (!playersPools.TryRemove(chatId, out pool))
@@ -315,7 +425,7 @@ namespace Mafia.App
             {
                 if (lockTaken)
                 {
-                    playSemaphoreSlim.Release();
+                    playSemaphore.Release();
                 }
             }
 
@@ -361,5 +471,36 @@ namespace Mafia.App
                 Console.WriteLine($"Successfully removed person with chat.Id {personChat}");
             }
         }
+
+        private async Task ConsiderVote(string index, string cityName, long chatId, long userId)
+        {
+            if (!index.All(char.IsDigit))
+            {
+                return;
+            }
+
+            var name = int.Parse(index);
+
+            var lockTaken = false;
+            try
+            {
+                await cityVotingSemaphore.WaitAsync();
+                lockTaken = true;
+
+                if (cityVotingPools.ContainsKey(cityName))
+                {
+                    await bot.SendTextMessageAsync(chatId, cityVotingPools[cityName].Vote(chatId, userId, name));
+                }
+            }
+            finally
+            {
+                if (lockTaken)
+                {
+                    cityVotingSemaphore.Release();
+                }
+            }
+        }
     }
+
+    // command -> city (does vote exist) -> cityVotePool (person can vote) -> roleVotePool (target is allowed)
 }

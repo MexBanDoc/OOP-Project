@@ -26,7 +26,7 @@ namespace Mafia.Domain
 
         public async Task End()
         {
-            Result = await userInterface.GetInteractionTarget(Role, city.Name);
+            Result = await userInterface.GetInteractionTarget(Role, city);
         }
 
         public IPerson Result { get; private set; }
