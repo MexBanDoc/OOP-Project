@@ -3,7 +3,6 @@
 namespace Mafia.Domain
 {
     public class SantaClausRole : Role
-
     {
         public SantaClausRole() : base(new List<IInteraction> {new XmasInteraction()})
         {

@@ -69,7 +69,8 @@ namespace Mafia.Domain
                 [new HealerRole()] = 10,
                 [new PoliсemanRole()] = 10,
                 [new SantaClausRole()] = 25,
-                [new WhoreRole()] = 25
+                [new WhoreRole()] = 25,
+                [new Mazai()] = 10,
             }, 30);
         
         // TODO: create a few settings

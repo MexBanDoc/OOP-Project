@@ -67,6 +67,7 @@
     <Compile Include="Domain\Interactions\HealInteraction.cs" />
     <Compile Include="Domain\Interactions\IInteraction.cs" />
     <Compile Include="Domain\Interactions\KillInteraction.cs" />
+    <Compile Include="Domain\Interactions\SavingRabbitsInteraction.cs" />
     <Compile Include="Domain\Interactions\VoteInteraction.cs" />
     <Compile Include="Domain\Interactions\XmasInteraction.cs" />
     <Compile Include="Domain\Interfaces\ICity.cs" />
@@ -79,6 +80,7 @@
     <Compile Include="Domain\Roles\HealerRole.cs" />
     <Compile Include="Domain\Roles\MafiaRole.cs" />
     <Compile Include="Domain\Roles\CitizenRole.cs" />
+    <Compile Include="Domain\Roles\Mazai.cs" />
     <Compile Include="Domain\Roles\PolicemanRole.cs" />
     <Compile Include="Domain\Roles\SantaClausRole.cs" />
     <Compile Include="Domain\Roles\WhoreRole.cs" />
