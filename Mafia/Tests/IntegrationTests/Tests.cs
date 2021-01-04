@@ -15,12 +15,9 @@ namespace Tests.IntegrationTests
         {
             private Dictionary<Role, IPerson> targets;
             
-            public async Task AskForInteractionTarget(IEnumerable<IPerson> players, Role role, ICity city)
+            public Task AskForInteractionTarget(IEnumerable<IPerson> players, Role role, ICity city)
             {
-                if (role.DayTime == DayTime.Night)
-                    Console.WriteLine("Город засыпает");
-                else 
-                    Console.WriteLine("Город просыпается");
+                Console.WriteLine(role.DayTime == DayTime.Night ? "Город засыпает" : "Город просыпается");
 
                 targets = new Dictionary<Role, IPerson>();
                 
@@ -35,22 +32,24 @@ namespace Tests.IntegrationTests
                 }
                 
                 targets[role] = victims[new Random().Next(victims.Count - 1)];
+                return Task.CompletedTask;
             }
 
-            public async Task<IPerson> GetInteractionTarget(Role role, string cityName)
+            public Task<IPerson> GetInteractionTarget(Role role, string cityName)
             {
-                return targets.ContainsKey(role) ? targets[role] : null;
+                return Task.FromResult(targets.ContainsKey(role) ? targets[role] : null);
             }
 
-            public async Task TellResults(ICity city, DayTime dayTime)
+            public Task TellResults(ICity city, DayTime dayTime)
             {
                 foreach (var pair in city.LastChanges)
                     Console.Write($"{pair.Key.Name} {pair.Value}");
                 Console.WriteLine();
                 Console.WriteLine();
+                return Task.CompletedTask;
             }
 
-            public async Task TellGameResult(WinState state, ICity city)
+            public Task TellGameResult(WinState state, ICity city)
             {
                 switch (state)
                 {
@@ -66,6 +65,7 @@ namespace Tests.IntegrationTests
                     default:
                         throw new ArgumentOutOfRangeException(nameof(state), state, null);
                 }
+                return Task.CompletedTask;
             }
         }
         

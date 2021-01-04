@@ -8,7 +8,7 @@ namespace Mafia.Domain
     {
         public int VoteDelay { get; }
         public Func<ICity, WinState> WinCondition { get; }
-        public string CityName { get; } = "CumCockCity";
+        public string CityName { get; set; } = "CumCockCity";
         public Dictionary<Role, int> PlayerDistribution { get; }
 
         public Settings(Func<ICity, WinState> winCondition, Dictionary<Role, int> playerDistribution, int voteDelay)

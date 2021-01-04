@@ -71,6 +71,7 @@
     <Compile Include="Domain\Interfaces\IPerson.cs" />
     <Compile Include="Domain\Interfaces\ISettings.cs" />
     <Compile Include="Domain\Interfaces\IUserInterface.cs" />
+    <Compile Include="Domain\Interfaces\IVoting.cs" />
     <Compile Include="Domain\Role.cs" />
     <Compile Include="Domain\Person.cs" />
     <Compile Include="Domain\Roles\HealerRole.cs" />
@@ -80,6 +81,7 @@
     <Compile Include="Domain\Roles\SantaClausRole.cs" />
     <Compile Include="Domain\Roles\WhoreRole.cs" />
     <Compile Include="Domain\Settings.cs" />
+    <Compile Include="Domain\Voting.cs" />
     <Compile Include="Infrastructure\MoreLinq.cs" />
     <Compile Include="Infrastructure\Resources.cs" />
     <Compile Include="Program.cs" />

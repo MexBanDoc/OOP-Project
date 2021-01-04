@@ -24,7 +24,7 @@ namespace Mafia.App
             [756835435] = "Коля @prefie",
             [527302283] = "Дима @bro_en",
             [749270491] = "СТЕПА @skachusov",
-            [930202628] = "Android @Andrey135296"
+            [930202628] = "Android (@Andrey135296)"
         };
 
         public PlayersPool(Random random)
