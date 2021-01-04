@@ -6,7 +6,7 @@ namespace Mafia.Domain
 {
     public class City : ICity
     {
-        public string CityName { get; }
+        public string Name { get; }
         public ICollection<IPerson> Population { get; }
         public ICollection<Role> Roles { get; } = new HashSet<Role>();
         public DayTime DayTime { get; private set; }
@@ -15,7 +15,7 @@ namespace Mafia.Domain
         public City(ICollection<IPerson> population, string cityName)
         {
             Population = population;
-            CityName = cityName;
+            Name = cityName;
             LastChanges = new ConcurrentDictionary<IPerson, PersonState>();
             foreach (var person in population)
             {

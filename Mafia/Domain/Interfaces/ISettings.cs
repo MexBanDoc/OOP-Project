@@ -5,6 +5,7 @@ namespace Mafia.Domain
 {
     public interface ISettings
     {
+        public int VoteDelay { get; }
         public Func<ICity, WinState> WinCondition { get; }
         
         public string CityName { get; }

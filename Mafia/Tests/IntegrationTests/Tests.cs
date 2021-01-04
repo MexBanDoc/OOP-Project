@@ -13,12 +13,17 @@ namespace Tests.IntegrationTests
     {
         private class ConsoleInterface : IUserInterface
         {
-            public async Task<IPerson> AskForInteractionTarget(IEnumerable<IPerson> players, Role role, ICity city)
+            private Dictionary<Role, IPerson> targets;
+            
+            public async Task AskForInteractionTarget(IEnumerable<IPerson> players, Role role, ICity city)
             {
                 if (role.DayTime == DayTime.Night)
                     Console.WriteLine("Город засыпает");
                 else 
                     Console.WriteLine("Город просыпается");
+
+                targets = new Dictionary<Role, IPerson>();
+                
                 var victims = new List<IPerson>();
                 foreach (var player in players)
                 {
@@ -29,7 +34,12 @@ namespace Tests.IntegrationTests
                     victims.Add(city.GetPersonByName(name));
                 }
                 
-                return victims[new Random().Next(victims.Count - 1)];
+                targets[role] = victims[new Random().Next(victims.Count - 1)];
+            }
+
+            public async Task<IPerson> GetInteractionTarget(Role role, string cityName)
+            {
+                return targets.ContainsKey(role) ? targets[role] : null;
             }
 
             public async Task TellResults(ICity city, DayTime dayTime)
@@ -86,7 +96,7 @@ namespace Tests.IntegrationTests
                 new Dictionary<Role, int>
                 {
                     [new MafiaRole()] = 50
-                });
+                }, 0);
             var city = new City(settings.GeneratePopulation(new[]
                         {
                             "Timofey",

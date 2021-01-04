@@ -30,6 +30,18 @@ namespace Mafia.Domain
         {
             return Name == other.Name && DayTime == other.DayTime;
         }
+        
+        public static bool operator ==(Role first, Role second)
+        {
+            if ((object) first == null)
+                return (object) second == null;
+            return first.Equals(second);
+        }
+
+        public static bool operator !=(Role role, Role obj)
+        {
+            return !(role == obj);
+        }
 
         public override int GetHashCode()
         {

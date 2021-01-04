@@ -6,14 +6,16 @@ namespace Mafia.Domain
 {
     public class Settings : ISettings
     {
+        public int VoteDelay { get; }
         public Func<ICity, WinState> WinCondition { get; }
         public string CityName { get; } = "CumCockCity";
         public Dictionary<Role, int> PlayerDistribution { get; }
 
-        public Settings(Func<ICity, WinState> winCondition, Dictionary<Role, int> playerDistribution)
+        public Settings(Func<ICity, WinState> winCondition, Dictionary<Role, int> playerDistribution, int voteDelay)
         {
             WinCondition = winCondition;
             PlayerDistribution = playerDistribution;
+            VoteDelay = voteDelay;
         }
 
         public IEnumerable<IPerson> GeneratePopulation(string[] names, Random random)
@@ -58,7 +60,7 @@ namespace Mafia.Domain
         }
         
         public static readonly ISettings Default = new Settings(DefaultWinCondition, 
-            new Dictionary<Role, int> {[new MafiaRole()] = 20});
+            new Dictionary<Role, int> {[new MafiaRole()] = 20}, 20);
         
         public static readonly ISettings Various = new Settings(DefaultWinCondition,
             new Dictionary<Role, int>
@@ -68,7 +70,7 @@ namespace Mafia.Domain
                 [new PoliсemanRole()] = 10,
                 [new SantaClausRole()] = 25,
                 [new WhoreRole()] = 25
-            });
+            }, 30);
         
         // TODO: create a few settings
     }

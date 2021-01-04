@@ -36,18 +36,28 @@ namespace Mafia.App
         
         private const int VoteDelay = 30;
         
-        public async Task<IPerson> AskForInteractionTarget(IEnumerable<IPerson> players, Role role, ICity city)
+        public async Task AskForInteractionTarget(IEnumerable<IPerson> players, Role role, ICity city)
         {
-            if (!cityToChat.ContainsKey(city)) return null;
+            if (!cityToChat.ContainsKey(city)) return;
 
             var choosers = players.ToHashSet();
-            if (choosers.Count == 0) return null;
+            if (choosers.Count == 0) return;
             
             await TellGreetingsToRole(role, city);
 
-            return role.DayTime == DayTime.Night
-                ? await AskRoleForInteractionTarget(city, choosers)
-                : await AskJudgedPerson(city, choosers);
+            if (role.DayTime == DayTime.Day)
+            {
+                await AskJudgedPerson(city, choosers);
+            }
+            else
+            {
+                await AskRoleForInteractionTarget(city, choosers);
+            }
+        }
+
+        public Task<IPerson> GetInteractionTarget(Role role, string cityName)
+        {
+            throw new NotImplementedException();
         }
 
         private async Task TellGreetingsToRole(Role role, ICity city)
@@ -235,7 +245,7 @@ namespace Mafia.App
             }
         }
 
-        private SemaphoreSlim playSemaphoreSlim = new SemaphoreSlim(1, 1);
+        private readonly SemaphoreSlim playSemaphoreSlim = new SemaphoreSlim(1, 1);
         
         private async Task PlayMethod(Chat chat, User user)
         {
@@ -248,7 +258,7 @@ namespace Mafia.App
                 
                 if (!playersPools.ContainsKey(chat.Id))
                 {
-                    playersPools[chat.Id] = new PlayersPool();
+                    playersPools[chat.Id] = new PlayersPool(random);
                     await bot.SendTextMessageAsync(chat.Id, "Record to game started!");
                 }
             }

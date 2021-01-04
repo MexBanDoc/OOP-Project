@@ -56,36 +56,38 @@ namespace Mafia.Domain
 
         private async Task DoInteractions(DayTime dayTime)
         {
-            var tasks = new List<Task<IPerson>>();
-            var roles = new List<Role>();
+            var votingList = new List<IVoting>();
             
             if (dayTime == DayTime.Day)
             {
-                var citizen = new CitizenRole();
-                roles.Add(citizen);
-                tasks.Add(UpdateCityChanges(citizen, person => true));
+                var voting = new Voting(new CitizenRole(), city, userInterface);
+                votingList.Add(voting);
             }
             else
             {
-                foreach (var role in city.Roles.Where(r => r.DayTime == dayTime))
-                {
-                    roles.Add(role);
-                    tasks.Add(UpdateCityChanges(role, person => role.Equals(person.NightRole)));
-                }
+                var collection = city.Roles.Where(r => r.DayTime == dayTime)
+                    .Select(role => new Voting(role, city, userInterface));
+                votingList.AddRange(collection);
             }
-            
-            await Task.WhenAll(tasks);
 
-            for (var i = 0; i < tasks.Count; i++)
+            await Task.WhenAll(votingList.Select(v => v.Start()));
+
+            await Task.Delay(TimeSpan.FromSeconds(settings.VoteDelay));
+
+            await Task.WhenAll(votingList.Select(v => v.End()));
+
+            foreach (var voting in votingList)
             {
-                var target = tasks[i].Result;
+                var target = voting.Result;
+                
                 if (target == null)
                 {
+                    // TODO: remove debug output
                     Console.WriteLine("Target is null");
                     continue;
                 }
-
-                city.AddChange(target, roles[i].Interact(target));
+                
+                city.AddChange(target, voting.Role.Interact(target));
             }
 
             foreach (var cityLastChange in 
@@ -94,11 +96,44 @@ namespace Mafia.Domain
                 cityLastChange.Key.TryKill();
             }
         }
+    }
 
-        private async Task<IPerson> UpdateCityChanges(Role role, Func<IPerson, bool> validate)
+    public interface IVoting
+    {
+        public Role Role { get; }
+
+        public Task Start();
+        public Task End();
+        
+        public IPerson Result { get; }
+    }
+
+    public class Voting : IVoting
+    {
+        public Role Role { get; }
+        private readonly ICity city;
+        private readonly IUserInterface userInterface;
+
+        public Voting(Role role, ICity city, IUserInterface userInterface)
         {
-            var band = city.Population.Where(p => p.IsAlive).Where(validate);
-            return await userInterface.AskForInteractionTarget(band, role, city);
+            Role = role;
+            this.city = city;
+            this.userInterface = userInterface;
         }
+
+        public async Task Start()
+        {
+            var band = city.Population
+                .Where(person => person.IsAlive)
+                .Where(person => (Role.DayTime == DayTime.Day ? person.DayRole : person.NightRole) == Role);
+            await userInterface.AskForInteractionTarget(band, Role, city);
+        }
+
+        public async Task End()
+        {
+            Result = await userInterface.GetInteractionTarget(Role, city.Name);
+        }
+
+        public IPerson Result { get; private set; }
     }
 }

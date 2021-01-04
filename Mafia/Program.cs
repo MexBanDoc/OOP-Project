@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading;
 using Mafia.App;
 
 namespace Mafia
@@ -10,13 +9,16 @@ namespace Mafia
         {
             Console.WriteLine("U alive now");
             var bot = new TgBot();
-            Thread.Sleep(-1);
+            Console.ReadKey();
             // var Game = new Game(Settings.Default, bot);
-            
-            // TODO: change pool to commands (organize state checking)
-            // TODO: change settings while recording people
+
+            // TODO: change poll to commands (organize state checking) (use cityName)
             // TODO: create cool settings presets
+            // TODO: change settings while recording people
             // TODO: split responsibilities of how to write and what to write
+            // TODO: set wait time in settings
+            
+            // /Krutovsky_Danya_(@peace)@CumCockCity -> (string: person)
         }
     }
 }

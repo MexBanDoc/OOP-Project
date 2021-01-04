@@ -15,7 +15,7 @@ namespace Mafia.App
         //     "Mason", "Harper", "Ethan", "Evelyn"
         // };
 
-        private readonly Random random = new Random();
+        private readonly Random random;
         private readonly ConcurrentDictionary<long, string> players = new ConcurrentDictionary<long, string>
         {
             [540232512] = "Timofey Belov (@MexBanDoc)",
@@ -26,6 +26,11 @@ namespace Mafia.App
             [749270491] = "СТЕПА @skachusov",
             [930202628] = "Android @Andrey135296"
         };
+
+        public PlayersPool(Random random)
+        {
+            this.random = random;
+        }
 
         public bool AddPlayer(long playerId, string name)
         {

@@ -5,7 +5,7 @@ namespace Mafia.Domain
 {
     public interface ICity
     {
-        public string CityName { get; }
+        public string Name { get; }
         public ICollection<IPerson> Population { get; }
         public ICollection<Role> Roles { get; }
         public DayTime DayTime { get; }
