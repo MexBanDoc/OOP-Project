@@ -27,9 +27,9 @@ namespace Mafia.App
 
         private readonly SemaphoreSlim playSemaphore = new SemaphoreSlim(1, 1);
 
-        private readonly ConcurrentDictionary<long, IPlayersPool> playersPools =
-            new ConcurrentDictionary<long, IPlayersPool>();
-        
+        private readonly ConcurrentDictionary<long, IGameRecord> gameRecords =
+            new ConcurrentDictionary<long, IGameRecord>();
+
         private readonly ConcurrentDictionary<IPerson, long> personToChat = new ConcurrentDictionary<IPerson, long>();
         
         private readonly ConcurrentDictionary<ICity, long> cityToChat = new ConcurrentDictionary<ICity, long>();
@@ -158,34 +158,6 @@ namespace Mafia.App
             }
             
             await Task.WhenAll(choosers.Select(person => bot.SendTextMessageAsync(personToChat[person], messageText, ParseMode.Html)));
-
-            // var pollMessages = choosers
-            //     .Select(chooser => personToChat[chooser])
-            //     .Select(userId => bot.SendPollAsync(userId, "Who will be your target?", names).Result)
-            //     .ToList();
-            //
-            // await Task.Delay(TimeSpan.FromSeconds(VoteDelay));
-            //
-            // var votedTargets = new List<IPerson>();
-            // foreach (var poll in pollMessages.Select(message =>
-            //     bot.StopPollAsync(message.Chat.Id, message.MessageId).Result))
-            // {
-            //     // foreach (var option in poll.Options)
-            //     //     bot.SendTextMessageAsync(chatId, $"{option.Text} chosen by {option.VoterCount}").Wait();
-            //     // bot.SendTextMessageAsync(chatId, $"Total votes {poll.TotalVoterCount}").Wait();
-            //
-            //     var winner = poll.Options.OrderBy(option => option.VoterCount).Last().Text;
-            //
-            //     votedTargets.Add(city.GetPersonByName(winner));
-            // }
-            //
-            // if (votedTargets.Count == 0) return null;
-            //
-            // var result = votedTargets[Math.Max(0, random.Next(votedTargets.Count) - 1)];
-            //
-            // // await bot.SendTextMessageAsync(cityToChat[city], $"{choosers.FirstOrDefault()?.NightRole.Name} chosen {result?.Name}");
-            //
-            // return result;
         }
 
         private async Task AskJudgedPerson(ICity city, Role role, IReadOnlyCollection<IPerson> choosers)
@@ -212,20 +184,6 @@ namespace Mafia.App
             cityVotingPool.AddRoleVoting(role, roleVoting);
 
             await bot.SendTextMessageAsync(chatId, messageText, ParseMode.Html);
-
-            // // bot.SendTextMessageAsync(chatId, $"Choosers {choosers.Count}").Wait();
-            //
-            // var message = await bot.SendPollAsync(chatId, "Who will you judge?", choosers.Select(p => p.Name), isAnonymous: false);
-            //
-            // var poll = await bot.StopPollAsync(chatId, message.MessageId);
-            //
-            // // foreach (var option in poll.Options)
-            // //     bot.SendTextMessageAsync(chatId, $"{option.Text} chosen by {option.VoterCount}").Wait();
-            // // bot.SendTextMessageAsync(chatId, $"Total votes {poll.TotalVoterCount}").Wait();
-            //
-            // var winner = poll.Options.OrderBy(option => option.VoterCount).Last().Text;
-            //
-            // return city.GetPersonByName(winner);
         }
 
         private async Task AddCityVoting(string cityName)
@@ -290,6 +248,9 @@ namespace Mafia.App
                 case WinState.PeacefulWins:
                     await bot.SendTextMessageAsync(chatId, "Мирные победили");
                     break;
+                case WinState.PsychoWins:
+                    await bot.SendTextMessageAsync(chatId, "Все сошли с ума");
+                    break;
                 default:
                     await bot.SendTextMessageAsync(chatId, "Technical problems");
                     break;
@@ -303,9 +264,9 @@ namespace Mafia.App
 
             mapMessage.Append("\nType /play if you want restart\nLike this game? Share this bot!");
             
-            bot.SendTextMessageAsync(chatId,mapMessage.ToString()).Wait();
+            await bot.SendTextMessageAsync(chatId,mapMessage.ToString());
             
-            bot.SendTextMessageAsync(chatId, "🍑").Wait();
+            await bot.SendTextMessageAsync(chatId, "🍑");
         }
 
         public TgBot()
@@ -326,13 +287,15 @@ namespace Mafia.App
             var chat = message.Chat;
             var user = message.From;
             
-            // Console.WriteLine($"{user.Username}: {user.Id}");
+            Console.WriteLine($"{user.Username}: {user.Id}");
             if (message.Text == null)
             {
                 return;
             }
 
-            switch (message.Text.Replace($"@{me.Username}", ""))
+            var messageText = message.Text.Replace($"@{me.Username}", "");
+
+            switch (messageText)
             {
                case PlayCommand:
                    await PlayMethod(chat, user);
@@ -342,18 +305,26 @@ namespace Mafia.App
                    return;
                case "/help":
                case "/start": 
-                   await bot.SendTextMessageAsync(chat.Id, Resources.HelpMessage); 
+                   await bot.SendTextMessageAsync(chat.Id, Resources.HelpMessage);
                    return;
                case "/guide":
                    await bot.SendTextMessageAsync(chat.Id, Resources.GuideMessage); 
                    return;
+               case "/settings":
+                   await bot.SendTextMessageAsync(chat.Id, Resources.SettingsMessage);
+                   return;
             }
 
-            var parts = message.Text.Split('_');
+            var parts = messageText.Split('_');
             if (parts.Length == 2 && parts[0].Length > 1)
             {
                 var index = parts[0].Substring(1);
                 await ConsiderVote(index, parts[1], chat.Id, user.Id);
+            }
+
+            if (parts.Length == 1)
+            {
+                await RememberSettings(chat.Id, parts[0].Replace("/", ""));
             }
         }
 
@@ -366,9 +337,9 @@ namespace Mafia.App
                 await playSemaphore.WaitAsync();
                 lockTaken = true;
                 
-                if (!playersPools.ContainsKey(chat.Id))
+                if (!gameRecords.ContainsKey(chat.Id))
                 {
-                    playersPools[chat.Id] = new PlayersPool(random);
+                    gameRecords[chat.Id] = new GameRecord(random);
                     await bot.SendTextMessageAsync(chat.Id, "Record to game started!");
                 }
             }
@@ -380,7 +351,7 @@ namespace Mafia.App
                 }
             }
 
-            var pool = playersPools[chat.Id];
+            var pool = gameRecords[chat.Id];
 
             var userName = $"{user.FirstName} {user.LastName} (@{user.Username})";
             var message = pool.AddPlayer(user.Id, userName)
@@ -407,7 +378,7 @@ namespace Mafia.App
 
         private async Task EndRecordMethod(long chatId)
         {
-            IPlayersPool pool;
+            IGameRecord record;
 
             var lockTaken = false;
 
@@ -416,7 +387,7 @@ namespace Mafia.App
                 await playSemaphore.WaitAsync();
                 lockTaken = true;
                 
-                if (!playersPools.TryRemove(chatId, out pool))
+                if (!gameRecords.TryRemove(chatId, out record))
                 {
                     await bot.SendTextMessageAsync(chatId, $"There no opened game record\nType {PlayCommand} to start one");
                 }
@@ -429,19 +400,14 @@ namespace Mafia.App
                 }
             }
 
-            if (pool == null)
+            if (record == null)
             {
                 return;
             }
-            
-            // TODO: while everyone types /play someone creates settings
-            // TODO: save chatId -> settings
 
             var population = new List<IPerson>();
 
-            var settings = Settings.Various;
-
-            foreach (var (userId, person) in pool.ExtractPersons(settings))
+            foreach (var (userId, person) in record.ExtractPersons())
             {
                 population.Add(person);
                 personToChat[person] = userId;
@@ -451,6 +417,7 @@ namespace Mafia.App
                 await SendUsersSaveMessage(message, userId, chatId);
             }
 
+            var settings = record.Settings;
             var city = new City(population, settings.CityName);
             cityToChat[city] = chatId;
             citiToAwake[city] = true;
@@ -500,7 +467,31 @@ namespace Mafia.App
                 }
             }
         }
-    }
 
-    // command -> city (does vote exist) -> cityVotePool (person can vote) -> roleVotePool (target is allowed)
+        private async Task RememberSettings(long chatId, string settingsName)
+        {
+            if (!gameRecords.ContainsKey(chatId))
+            {
+                return;
+            }
+
+            var previousSettings = gameRecords[chatId].Settings;
+
+            gameRecords[chatId].Settings = settingsName switch
+            {
+                nameof(Settings.Classic) => Settings.Classic,
+                nameof(Settings.Deadly) => Settings.Deadly,
+                nameof(Settings.Detective) => Settings.Detective,
+                nameof(Settings.Various) => Settings.Various,
+                nameof(Settings.CrazyNosyBizarreTown) => Settings.CrazyNosyBizarreTown,
+                nameof(Settings.GoodForHealthBedForEducation) => Settings.GoodForHealthBedForEducation,
+                _ => gameRecords[chatId].Settings
+            };
+
+            if (gameRecords[chatId].Settings != previousSettings)
+            {
+                await bot.SendTextMessageAsync(chatId, $"Successfully changed game settings to {settingsName} ⚙️");
+            }
+        }
+    }
 }

@@ -10,10 +10,8 @@ namespace Mafia
             Console.WriteLine("U alive now");
             var bot = new TgBot();
             Console.ReadKey();
-            // var Game = new Game(Settings.Default, bot);
+            // var Game = new Game(Settings.Deadly, bot);
             
-            // TODO: create cool settings presets
-            // TODO: change settings while recording people
             // TODO: split responsibilities of how to write and what to write
             
             // TODO: write semaphore method

@@ -4,6 +4,7 @@
     {
         InProcess,
         PeacefulWins,
-        MafiaWins
+        MafiaWins,
+        PsychoWins
     }
 }

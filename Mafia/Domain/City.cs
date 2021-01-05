@@ -6,6 +6,14 @@ namespace Mafia.Domain
 {
     public class City : ICity
     {
+        private static readonly ConcurrentBag<string> NamesPool = new ConcurrentBag<string>
+        {
+            "Tamriel",
+            "New_Vegas",
+            "Dirthmous",
+            "FireLink"
+        };
+        
         public string Name { get; }
         public ICollection<IPerson> Population { get; }
         public ICollection<Role> Roles { get; } = new HashSet<Role>();
@@ -16,6 +24,11 @@ namespace Mafia.Domain
         {
             Population = population;
             Name = cityName;
+            if (NamesPool.TryTake(out cityName))
+            {
+                // poor trick
+                Name = cityName;
+            }
             LastChanges = new ConcurrentDictionary<IPerson, PersonState>();
             foreach (var person in population)
             {
@@ -48,12 +61,20 @@ namespace Mafia.Domain
 
         public void AddChange(IPerson target, PersonState state)
         {
-            if (LastChanges.ContainsKey(target) && LastChanges[target] != PersonState.Immortal)
+            if (!LastChanges.ContainsKey(target))
             {
                 LastChanges[target] = state;
                 return;
             }
-            LastChanges[target] = state;
+            if (LastChanges[target] != PersonState.Immortal)
+            {
+                LastChanges[target] = state;
+            }
+        }
+
+        ~City()
+        {
+            NamesPool.Add(Name);
         }
     }
 }

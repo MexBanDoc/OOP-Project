@@ -82,8 +82,7 @@ namespace Mafia.Domain
                 
                 if (target == null)
                 {
-                    // TODO: remove debug output
-                    Console.WriteLine("Target is null");
+                    // Console.WriteLine("Target is null");
                     continue;
                 }
                 

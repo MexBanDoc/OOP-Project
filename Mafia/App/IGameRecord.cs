@@ -3,9 +3,10 @@ using Mafia.Domain;
 
 namespace Mafia.App
 {
-    public interface IPlayersPool
+    public interface IGameRecord
     {
+        public ISettings Settings { get; set; }
         bool AddPlayer(long playerId, string name);
-        IEnumerable<(long, IPerson)> ExtractPersons(ISettings settings);
+        IEnumerable<(long, IPerson)> ExtractPersons();
     }
 }

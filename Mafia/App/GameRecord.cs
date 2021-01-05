@@ -5,7 +5,7 @@ using Mafia.Domain;
 
 namespace Mafia.App
 {
-    public class PlayersPool : IPlayersPool
+    public class GameRecord : IGameRecord
     {
         // private static readonly List<string> Names = new List<string>{
         //     "Liam", "Olivia", "Noah", "Emma",
@@ -27,9 +27,20 @@ namespace Mafia.App
             [930202628] = "Android (@Andrey135296)"
         };
 
-        public PlayersPool(Random random)
+        private ISettings settings = Domain.Settings.Various;
+
+        public GameRecord(Random random)
         {
             this.random = random;
+        }
+
+        public ISettings Settings
+        {
+            get => settings;
+            set
+            {
+                if (value != null) settings = value;
+            }
         }
 
         public bool AddPlayer(long playerId, string name)
@@ -43,7 +54,7 @@ namespace Mafia.App
             return true;
         }
 
-        public IEnumerable<(long, IPerson)> ExtractPersons(ISettings settings)
+        public IEnumerable<(long, IPerson)> ExtractPersons()
         {
             var ids = new long[players.Count];
             var names = new string[players.Count];
@@ -57,7 +68,7 @@ namespace Mafia.App
 
             i = 0;
 
-            foreach (var person in settings.GeneratePopulation(names, random))
+            foreach (var person in Settings.GeneratePopulation(names, random))
             {
                 yield return (ids[i++], person);
             }

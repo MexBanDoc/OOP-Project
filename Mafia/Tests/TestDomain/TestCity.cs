@@ -11,7 +11,7 @@ namespace Tests.TestDomain
     public class TestCity
     {
         private static readonly City City =
-            new City(new List<IPerson>(Settings.Default.GeneratePopulation(new[]
+            new City(new List<IPerson>(Settings.Deadly.GeneratePopulation(new[]
                     {
                         "Mafia",
                         "Peaceful1",
@@ -19,7 +19,7 @@ namespace Tests.TestDomain
                         "Peaceful3"
                     },
                     new Random(1984))),
-                Settings.Default.CityName);
+                Settings.Deadly.CityName);
 
         [Test]
         public void TestConstructor()
@@ -33,7 +33,7 @@ namespace Tests.TestDomain
                     new Person(citizen, doctor, "Bob"),
                     new Person(citizen, mafia, "Alice"),
                     new Person(citizen, null, "Ira"),
-                }), Settings.Default.CityName);
+                }), Settings.Deadly.CityName);
 
             localCity.Roles.Count.Should().Be(3);
             localCity.Roles.Should().BeEquivalentTo(citizen, mafia, doctor);

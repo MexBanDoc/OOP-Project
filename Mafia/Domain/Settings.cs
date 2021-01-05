@@ -58,8 +58,20 @@ namespace Mafia.Domain
                 return WinState.MafiaWins;
             return WinState.InProcess;
         }
-        
-        public static readonly ISettings Default = new Settings(DefaultWinCondition, 
+
+        private static WinState SaneWinCondition(ICity city)
+        {
+            var insaneCount = city.Population.Count(person => person.IsAlive && person.NightRole != null);
+            var totalCount = city.Population.Count(p => p.IsAlive);
+
+            if (insaneCount == totalCount)
+                return WinState.PsychoWins;
+            if (insaneCount == 0)
+                return WinState.PeacefulWins;
+            return WinState.InProcess;
+        }
+
+        public static readonly ISettings Deadly = new Settings(DefaultWinCondition, 
             new Dictionary<Role, int> {[new MafiaRole()] = 20}, 20);
         
         public static readonly ISettings Various = new Settings(DefaultWinCondition,
@@ -72,7 +84,32 @@ namespace Mafia.Domain
                 [new WhoreRole()] = 25,
                 [new Mazai()] = 10,
             }, 30);
-        
-        // TODO: create a few settings
+
+        public static readonly ISettings GoodForHealthBedForEducation = new Settings(DefaultWinCondition,
+            new Dictionary<Role, int>
+            {
+                [new WhoreRole()] = 65,
+                [new MafiaRole()] = 35
+            }, 30);
+
+        public static readonly ISettings Detective = new Settings(DefaultWinCondition, new Dictionary<Role, int>
+        {
+            [new MafiaRole()] = 50,
+            [new PoliсemanRole()] = 50
+        }, 40);
+
+        public static readonly ISettings Classic = new Settings(DefaultWinCondition, new Dictionary<Role, int>
+        {
+            [new MafiaRole()] = 20,
+            [new HealerRole()] = 10,
+            [new PoliсemanRole()] = 10,
+        }, 60);
+
+        public static readonly ISettings CrazyNosyBizarreTown = new Settings(SaneWinCondition, new Dictionary<Role, int>
+        {
+            [new Mazai()] = 25,
+            [new SantaClausRole()] = 25,
+            [new WhoreRole()] = 25
+        }, 35);
     }
 }

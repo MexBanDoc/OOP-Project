@@ -72,7 +72,7 @@ namespace Tests.IntegrationTests
         [Test]
         public void PeacefulWins()
         {
-            var city = new City(Settings.Default.GeneratePopulation(new[]
+            var city = new City(Settings.Deadly.GeneratePopulation(new[]
                         {
                             "Timofey",
                             "ЛЕНА",
@@ -82,8 +82,8 @@ namespace Tests.IntegrationTests
                         },
                         new Random())
                     .ToHashSet(),
-                Settings.Default.CityName);
-            var game = new Game(Settings.Default, city, new ConsoleInterface());
+                Settings.Deadly.CityName);
+            var game = new Game(Settings.Deadly, city, new ConsoleInterface());
             game.StartGame().Wait();
             game.GetGameStatus().Should().Be(WinState.PeacefulWins);
         }
