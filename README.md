@@ -1,3 +1,10 @@
-# OOP-Project
-https://docs.google.com/document/d/1P_NWmKKwwi9qT1z1Y0sS4Wp-d6B3wx1lo-TkgUED93E/edit#heading=h.cgp2i84m84ed
+# OOP-Project - Mafia
+
+Соловьев Андрей ФТ-202, Белов Тимофей ФТ-202, Крутовский Данил ФТ-202, Габдорахманова Елена ФТ-202
+
 https://docs.google.com/document/d/1OxZUDPyJQB16TUazWT52uAUgLuqxSrbzdQZ2gndzHf0/edit# - персона + сценарии
+
+Есть объект "Игра" - он управляет городом, персонами и их взаимодействием
+Есть бот - он взаимодействует с телеграмом и ворочает игру
+
+Точки расширения - можно добавлять новые роли, типы взаимодействия и новых ботов, игровые режимы (settings)
