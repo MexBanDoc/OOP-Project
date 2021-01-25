@@ -9,16 +9,7 @@ namespace Mafia.App
     {
 
         private readonly Random random;
-        private readonly ConcurrentDictionary<long, string> players = new ConcurrentDictionary<long, string>
-        {
-            [540232512] = "Timofey Belov (@MexBanDoc)",
-            [626404561] = "Danya Krutovsky (@krutovsky)",
-            [376240791] = "ЛенОЧКА (@mefoolyhi)",
-            [756835435] = "Коля @prefie",
-            [527302283] = "Дима @bro_en",
-            [749270491] = "СТЕПА @skachusov",
-            [930202628] = "Android (@Andrey135296)"
-        };
+        private readonly ConcurrentDictionary<long, string> players = new ConcurrentDictionary<long, string>();
 
         private ISettings settings = Domain.Settings.Various;
 

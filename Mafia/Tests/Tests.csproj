@@ -114,7 +114,6 @@
     </ItemGroup>
     <ItemGroup>
         <Compile Include="IntegrationTests\Tests.cs" />
-        <Compile Include="TestApp\TestTGBot.cs" />
         <Compile Include="TestDomain\TestCity.cs" />
         <Compile Include="TestDomain\TestGame.cs" />
         <Compile Include="TestDomain\TestInteractions.cs" />
