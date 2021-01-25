@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading.Tasks;
+using ApprovalTests;
+using ApprovalTests.Reporters;
 using FluentAssertions;
 using Mafia.Domain;
 using NUnit.Framework;
@@ -11,27 +15,34 @@ namespace Tests.IntegrationTests
     [TestFixture]
     public class Tests
     {
-        private class ConsoleInterface : IUserInterface
+        private class StringInterface : IUserInterface
         {
             private Dictionary<Role, IPerson> targets;
+            private StringBuilder result = new StringBuilder();
             
             public Task AskForInteractionTarget(IEnumerable<IPerson> players, Role role, ICity city)
             {
-                Console.WriteLine(role.DayTime == DayTime.Night ? "Город засыпает" : "Город просыпается");
+                result.Append(role.DayTime == DayTime.Night ? "Город засыпает" : "Город просыпается");
+                result.Append("\n");
 
                 targets = new Dictionary<Role, IPerson>();
                 
                 var victims = new List<IPerson>();
                 foreach (var player in players)
                 {
-                    Console.WriteLine($"Просыпается {role.Name} {player.Name}");
+                    result.Append($"Просыпается {role.Name} {player.Name}");
+                    result.Append("\n");
                     var name = city.Population
                         .Where(person => person.NightRole is null || !person.NightRole.Equals(role))
                         .First(person => person.IsAlive).Name;
                     victims.Add(city.GetPersonByName(name));
                 }
+
+                if (victims.Count == 0)
+                    targets[role] = null;
+                else
+                    targets[role] = victims[0];
                 
-                targets[role] = victims[new Random().Next(victims.Count - 1)];
                 return Task.CompletedTask;
             }
 
@@ -43,9 +54,9 @@ namespace Tests.IntegrationTests
             public Task TellResults(ICity city, DayTime dayTime)
             {
                 foreach (var pair in city.LastChanges)
-                    Console.Write($"{pair.Key.Name} {pair.Value}");
-                Console.WriteLine();
-                Console.WriteLine();
+                    result.Append($"{pair.Key.Name} {pair.Value}");
+                result.Append("\n");
+                result.Append("\n");
                 return Task.CompletedTask;
             }
 
@@ -54,63 +65,104 @@ namespace Tests.IntegrationTests
                 switch (state)
                 {
                     case WinState.MafiaWins:
-                        Console.WriteLine("Мафия победила");
+                        result.Append("Мафия победила");
                         break;
                     case WinState.InProcess:
-                        Console.WriteLine("Ничья");
+                        result.Append("Ничья");
                         break;
                     case WinState.PeacefulWins:
-                        Console.WriteLine("Мирные победили");
+                        result.Append("Мирные победили");
+                        break;
+                    case WinState.PsychoWins:
+                        result.Append("Психи захватили мир!1!");
                         break;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(state), state, null);
                 }
+                result.Append("\n");
                 return Task.CompletedTask;
             }
+
+            public string GetGameProcess() => result.ToString();
         }
         
+        
         [Test]
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        [UseReporter(typeof(DiffReporter))]
         public void PeacefulWins()
         {
-            var city = new City(Settings.Deadly.GeneratePopulation(new[]
-                        {
-                            "Timofey",
-                            "ЛЕНА",
-                            "Android",
-                            "Дыня",
-                            "God"
-                        },
-                        new Random())
-                    .ToHashSet(),
-                Settings.Deadly.CityName);
-            var game = new Game(Settings.Deadly, city, new ConsoleInterface());
-            game.StartGame().Wait();
-            game.GetGameStatus().Should().Be(WinState.PeacefulWins);
-        }
-
-        [Test]
-        public void MafiaWins()
-        {
-            var settings = new Settings(
-                Settings.DefaultWinCondition,
-                new Dictionary<Role, int>
-                {
-                    [new MafiaRole()] = 50
-                }, 0);
+            var settings = new Settings(Settings.DefaultWinCondition,
+                new Dictionary<Role, int> {[new MafiaRole()] = 10}, 0);
             var city = new City(settings.GeneratePopulation(new[]
                         {
                             "Timofey",
-                            "ЛЕНА",
+                            "ЛенОЧКА",
                             "Android",
                             "Дыня",
-                            "God"
+                            "God",
+                            "Степан",
+                            "Николай"
                         },
-                        new Random())
+                        new Random(156))
+                    .ToHashSet(),
+               settings.CityName);
+            var inter = new StringInterface();
+            var game = new Game(settings, city, inter);
+            game.StartGame().Wait();
+            game.GetGameStatus().Should().Be(WinState.PeacefulWins);
+            Approvals.Verify(inter.GetGameProcess());
+        }
+        
+        [Test]
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        [UseReporter(typeof(DiffReporter))]
+        public void MafiaWins()
+        {
+            var settings = new Settings(Settings.DefaultWinCondition,
+                new Dictionary<Role, int> {[new MafiaRole()] = 60}, 0);
+            var city = new City(settings.GeneratePopulation(new[]
+                        {
+                            "Timofey",
+                            "Леночка",
+                            "Android",
+                            "Дыня",
+                            "God",
+                            "Степан"
+                        },
+                        new Random(4))
                     .ToHashSet(),
                 settings.CityName);
-            var game = new Game(settings, city, new ConsoleInterface());
+            var inter = new StringInterface();
+            var game = new Game(settings, city, inter);
             game.StartGame().Wait();
             game.GetGameStatus().Should().Be(WinState.MafiaWins);
+            Approvals.Verify(inter.GetGameProcess());
+        }
+        
+        [Test]
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        [UseReporter(typeof(DiffReporter))]
+        public void PsychoWins()
+        {
+            var settings = new Settings(Settings.SaneWinCondition, Settings.CrazyNosyBizarreTown.PlayerDistribution,
+                0);
+            var city = new City(settings.GeneratePopulation(new[]
+                        {
+                            "Timofey",
+                            "Леночка",
+                            "Android",
+                            "Дыня",
+                            "Степан"
+                        },
+                        new Random(4))
+                    .ToHashSet(),
+                settings.CityName);
+            var inter = new StringInterface();
+            var game = new Game(settings, city, inter);
+            game.StartGame().Wait();
+            game.GetGameStatus().Should().Be(WinState.PsychoWins);
+            Approvals.Verify(inter.GetGameProcess());
         }
     }
 }

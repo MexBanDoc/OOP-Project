@@ -16,7 +16,7 @@ namespace Mafia.Domain
                 }
                 else if (person.Name[i] == ' ')
                 {
-                    name.Append("  ");
+                    name.Append(" ");
                 }
                 else
                 {

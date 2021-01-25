@@ -8,7 +8,7 @@ namespace Mafia.Domain
     {
         public int VoteDelay { get; }
         public Func<ICity, WinState> WinCondition { get; }
-        public string CityName { get; set; } = "CumCockCity";
+        public string CityName { get; } = "DefaultCity";
         public Dictionary<Role, int> PlayerDistribution { get; }
 
         public Settings(Func<ICity, WinState> winCondition, Dictionary<Role, int> playerDistribution, int voteDelay)
@@ -26,7 +26,7 @@ namespace Mafia.Domain
                 .OrderBy(x => random.Next()).ToList();
 
             var currentIndex = 0;
-            var citizen = new CitizenRole();
+            var citizen = new PeacefulRole();
 
             foreach (var role in PlayerDistribution.Keys)
             {
@@ -59,7 +59,7 @@ namespace Mafia.Domain
             return WinState.InProcess;
         }
 
-        private static WinState SaneWinCondition(ICity city)
+        public static WinState SaneWinCondition(ICity city)
         {
             var insaneCount = city.Population.Count(person => person.IsAlive && person.NightRole != null);
             var totalCount = city.Population.Count(p => p.IsAlive);
@@ -78,11 +78,11 @@ namespace Mafia.Domain
             new Dictionary<Role, int>
             {
                 [new MafiaRole()] = 20,
-                [new HealerRole()] = 10,
+                [new DoctorRole()] = 10,
                 [new PoliсemanRole()] = 10,
                 [new SantaClausRole()] = 25,
                 [new WhoreRole()] = 25,
-                [new Mazai()] = 10,
+                [new MazaiRole()] = 10,
             }, 30);
 
         public static readonly ISettings GoodForHealthBedForEducation = new Settings(DefaultWinCondition,
@@ -101,13 +101,13 @@ namespace Mafia.Domain
         public static readonly ISettings Classic = new Settings(DefaultWinCondition, new Dictionary<Role, int>
         {
             [new MafiaRole()] = 20,
-            [new HealerRole()] = 10,
+            [new DoctorRole()] = 10,
             [new PoliсemanRole()] = 10,
         }, 60);
 
         public static readonly ISettings CrazyNosyBizarreTown = new Settings(SaneWinCondition, new Dictionary<Role, int>
         {
-            [new Mazai()] = 25,
+            [new MazaiRole()] = 25,
             [new SantaClausRole()] = 25,
             [new WhoreRole()] = 25
         }, 35);

@@ -18,7 +18,7 @@ namespace Mafia.Domain
             this.userInterface = userInterface;
         }
 
-        public async Task ProcessNight()
+        private async Task ProcessNight()
         {
             city.StartNight();
             await DoInteractions(DayTime.Night);
@@ -47,20 +47,20 @@ namespace Mafia.Domain
         }
 
         public WinState GetGameStatus() => settings.WinCondition(city);
-        
-        public async Task ProcessDay()
+
+        private async Task ProcessDay()
         {
             city.StartDay();
             await DoInteractions(DayTime.Day);
         }
 
-        private async Task DoInteractions(DayTime dayTime)
+        public async Task DoInteractions(DayTime dayTime)
         {
             var votingList = new List<IVoting>();
             
             if (dayTime == DayTime.Day)
             {
-                var voting = new Voting(new CitizenRole(), city, userInterface);
+                var voting = new Voting(new PeacefulRole(), city, userInterface);
                 votingList.Add(voting);
             }
             else
@@ -82,6 +82,7 @@ namespace Mafia.Domain
                 
                 if (target == null)
                 {
+                    
                     // Console.WriteLine("Target is null");
                     continue;
                 }

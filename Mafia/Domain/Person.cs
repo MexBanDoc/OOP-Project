@@ -8,7 +8,11 @@
             NightRole = nightRole;
             Name = name;
         }
-        
+
+        public Person()
+        {
+        }
+
         public bool TryKill()
         {
             if (IsImmortal) return false;

@@ -15,7 +15,6 @@ namespace Mafia.Domain
 
         public PersonState Interact(IPerson person)
         {
-            // Console.WriteLine($"{Name} starts interact");
             return interactions.Select(inter => inter.Interact(person)).Max();
         }
 

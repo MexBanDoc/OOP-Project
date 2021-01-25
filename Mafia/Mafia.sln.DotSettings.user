@@ -1,7 +1,16 @@
 ﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=31950eed_002D7a38_002D4ffd_002D82cb_002Db06c414ec246/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="TestLinq" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;Project Location="C:\Users\kruto\RiderProjects\Mafia\Mafia\Tests" Presentation="&amp;lt;Tests&amp;gt;" /&gt;&#xD;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=2af4bde3_002Da2ab_002D4b5f_002D8b6c_002Da361171fb774/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="PsychoWins #2" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::BA3B5CD2-FDAC-40BF-8CA4-AE4559E45D70::.NETFramework,Version=v4.8::Tests.IntegrationTests.Tests.PsychoWins&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::BA3B5CD2-FDAC-40BF-8CA4-AE4559E45D70::.NETFramework,Version=v4.8::Tests.TestDomain.TestGame.DoInteractionsDay&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::BA3B5CD2-FDAC-40BF-8CA4-AE4559E45D70::.NETFramework,Version=v4.8::Tests.TestDomain.TestGame.DoInteractions&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::BA3B5CD2-FDAC-40BF-8CA4-AE4559E45D70::.NETFramework,Version=v4.8::Tests.TestDomain.TestSettings.TestDefaultWinCondition&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::BA3B5CD2-FDAC-40BF-8CA4-AE4559E45D70::.NETFramework,Version=v4.8::Tests.TestDomain.TestSettings.GeneratePopulation&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
+	
+	
+	
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=mafiaprojectbot/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=_0413_043E_0440_043E_0434/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=_041C_0430_0444_0438_044F/@EntryIndexedValue">True</s:Boolean>

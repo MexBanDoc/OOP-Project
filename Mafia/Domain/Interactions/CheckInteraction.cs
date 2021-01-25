@@ -2,7 +2,6 @@
 {
     public class CheckInteraction : IInteraction
     {
-        
         public PersonState Interact(IPerson person)
         {
             if (person.NightRole == null) return PersonState.Alive;

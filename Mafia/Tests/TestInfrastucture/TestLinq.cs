@@ -26,7 +26,6 @@ namespace Tests.TestInfrastucture
         [TestCaseSource("TestLinqCases")]
         public void MultiplySuccess(IEnumerable<Tuple<string, int>> input, string[] result)
         {
-            
             var output = Mafia.Infrastructure.MoreLinq.Multiply(input).ToArray();
             output.Should().HaveCount(result.Length, "because we should put all objects" +
                                                     "which is the first element in tuple as many times as second value" +

@@ -2,9 +2,9 @@
 
 namespace Mafia.Domain
 {
-    public class CitizenRole : Role
+    public class PeacefulRole : Role
     {
-        public CitizenRole() : base(new List<IInteraction>{new VoteInteraction()})
+        public PeacefulRole() : base(new List<IInteraction>{new VoteInteraction()})
         {
         }
 

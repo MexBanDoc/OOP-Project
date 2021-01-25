@@ -25,8 +25,8 @@ namespace Tests.TestDomain
         public void TestConstructor()
         {
             var mafia = new MafiaRole();
-            var doctor = new HealerRole();
-            var citizen = new CitizenRole();
+            var doctor = new DoctorRole();
+            var citizen = new PeacefulRole();
             var localCity = new City(new List<IPerson>(
                 new[]
                 {
@@ -92,7 +92,7 @@ namespace Tests.TestDomain
         [Test]
         public static void AddChangeError()
         {
-            var person = new Person(new CitizenRole(), new HealerRole(), "Bob");
+            var person = new Person(new PeacefulRole(), new DoctorRole(), "Bob");
             City.LastChanges.ContainsKey(person).Should().BeFalse();
             City.AddChange(person, new MafiaRole().Interact(person));
             City.LastChanges.Count.Should().Be(1);

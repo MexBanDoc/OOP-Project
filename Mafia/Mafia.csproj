@@ -77,10 +77,10 @@
     <Compile Include="Domain\Interfaces\IVoting.cs" />
     <Compile Include="Domain\Role.cs" />
     <Compile Include="Domain\Person.cs" />
-    <Compile Include="Domain\Roles\HealerRole.cs" />
+    <Compile Include="Domain\Roles\DoctorRole.cs" />
     <Compile Include="Domain\Roles\MafiaRole.cs" />
-    <Compile Include="Domain\Roles\CitizenRole.cs" />
-    <Compile Include="Domain\Roles\Mazai.cs" />
+    <Compile Include="Domain\Roles\PeacefulRole.cs" />
+    <Compile Include="Domain\Roles\MazaiRole.cs" />
     <Compile Include="Domain\Roles\PolicemanRole.cs" />
     <Compile Include="Domain\Roles\SantaClausRole.cs" />
     <Compile Include="Domain\Roles\WhoreRole.cs" />
